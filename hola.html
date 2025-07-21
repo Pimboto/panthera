@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformación Total - Guía Definitiva</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background-color: #fafafa;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #000000 0%, #2d2d2d 100%);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            letter-spacing: -0.02em;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 0.95rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .nav-container {
+            background: white;
+            border-radius: 16px;
+            padding: 8px;
+            margin-bottom: 40px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .nav-tabs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+        }
+        
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 16px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            color: #6b7280;
+        }
+        
+        .tab-btn.active {
+            background: #000;
+            color: white;
+        }
+        
+        .tab-btn:hover:not(.active) {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .content-section {
+            display: none;
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .section-header {
+            padding: 40px 40px 0 40px;
+            border-bottom: 1px solid #f3f4f6;
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+        
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: #6b7280;
+            font-weight: 400;
+        }
+        
+        .section-content {
+            padding: 0 40px 40px 40px;
+        }
+        
+        .highlight-box {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 30px 0;
+            border-left: 4px solid #000;
+        }
+        
+        .highlight-box strong {
+            color: #000;
+        }
+        
+        /* Horario Styles */
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+        }
+        
+        .time-block {
+            background: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.2s ease;
+        }
+        
+        .time-block:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .time-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .activity-list {
+            font-size: 0.95rem;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+        
+        .activity-list strong {
+            color: #000;
+        }
+        
+        /* Supplements Styles */
+        .supplement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+        }
+        
+        .supplement-card {
+            background: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 28px;
+            transition: all 0.2s ease;
+        }
+        
+        .supplement-card:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .supplement-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 20px;
+        }
+        
+        .supplement-details {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+            color: #000;
+            font-size: 0.9rem;
+        }
+        
+        /* Workout Styles */
+        .workout-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 30px;
+        }
+        
+        .workout-day {
+            background: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 30px;
+            transition: all 0.2s ease;
+        }
+        
+        .workout-day:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .workout-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .exercise-list {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .exercise {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 0.95rem;
+            color: #374151;
+            transition: all 0.2s ease;
+        }
+        
+        .exercise:hover {
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+        
+        .exercise-number {
+            font-weight: 600;
+            color: #000;
+        }
+        
+        /* Meals Styles */
+        .meal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        
+        .meal-card {
+            background: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.2s ease;
+        }
+        
+        .meal-card:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .meal-time {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .meal-content {
+            font-size: 0.95rem;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+        
+        .meal-macros {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 16px;
+            font-weight: 600;
+            color: #000;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        /* Shopping Styles */
+        .shopping-grid {
+            display: grid;
+            gap: 30px;
+        }
+        
+        .store-section {
+            background: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 30px;
+            transition: all 0.2s ease;
+        }
+        
+        .store-section:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .store-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .store-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #000;
+        }
+        
+        .store-budget {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #059669;
+            background: #ecfdf5;
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+        
+        .store-info {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+        
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+        }
+        
+        .item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .item-name {
+            color: #374151;
+        }
+        
+        .item-price {
+            font-weight: 600;
+            color: #059669;
+        }
+        
+        /* Progress Styles */
+        .progress-section {
+            background: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .progress-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .tracking-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .track-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+        
+        .track-item:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .track-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 12px;
+        }
+        
+        .track-description {
+            font-size: 0.9rem;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+        
+        /* Emergency Styles */
+        .emergency-grid {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .emergency-card {
+            background: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 28px;
+            transition: all 0.2s ease;
+        }
+        
+        .emergency-card:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .emergency-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #dc2626;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .emergency-content {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            font-size: 0.95rem;
+            color: #374151;
+            line-height: 1.6;
+        }
+        
+        .emergency-content strong {
+            color: #000;
+        }
+        
+        /* Timeline Styles */
+        .timeline-grid {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .timeline-item {
+            background: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 28px;
+            border-left: 4px solid #000;
+            transition: all 0.2s ease;
+        }
+        
+        .timeline-item:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .timeline-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 16px;
+        }
+        
+        .timeline-content {
+            font-size: 0.95rem;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+        
+        /* Summary Box */
+        .summary-box {
+            background: linear-gradient(135deg, #000000 0%, #2d2d2d 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            margin-top: 50px;
+        }
+        
+        .summary-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .summary-text {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        
+        .cta-button {
+            background: white;
+            color: #000;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255,255,255,0.2);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+            
+            .header {
+                padding: 40px 0;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .section-header,
+            .section-content {
+                padding: 30px 24px;
+            }
+            
+            .section-header {
+                padding-bottom: 0;
+                margin-bottom: 30px;
+            }
+            
+            .nav-tabs {
+                grid-template-columns: 1fr;
+            }
+            
+            .schedule-grid,
+            .workout-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Transformación Total</h1>
+            <p>Tu guía definitiva para cambiar tu vida completamente</p>
+            <p style="margin-top: 20px; opacity: 0.8;">Medellín, Colombia • 21 años • 69kg → 80kg+ • Trabajo 6am-2pm</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card fade-in">
+                <div class="stat-number">2,950</div>
+                <div class="stat-label">Calorías Diarias</div>
+            </div>
+            <div class="stat-card fade-in">
+                <div class="stat-number">152g</div>
+                <div class="stat-label">Proteína Diaria</div>
+            </div>
+            <div class="stat-card fade-in">
+                <div class="stat-number">100,000</div>
+                <div class="stat-label">COP Presupuesto Semanal</div>
+            </div>
+            <div class="stat-card fade-in">
+                <div class="stat-number">4x</div>
+                <div class="stat-label">Entrenamientos por Semana</div>
+            </div>
+        </div>
+        
+        <div class="nav-container fade-in">
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="showSection('horario')">Horario Diario</button>
+                <button class="tab-btn" onclick="showSection('suplementos')">Suplementos</button>
+                <button class="tab-btn" onclick="showSection('entrenamientos')">Entrenamientos</button>
+                <button class="tab-btn" onclick="showSection('comidas')">Plan Alimentario</button>
+                <button class="tab-btn" onclick="showSection('compras')">Guía de Compras</button>
+                <button class="tab-btn" onclick="showSection('progreso')">Seguimiento</button>
+                <button class="tab-btn" onclick="showSection('emergencias')">Contingencias</button>
+                <button class="tab-btn" onclick="showSection('cronograma')">Cronograma</button>
+            </div>
+        </div>
+        
+        <!-- HORARIO DIARIO -->
+        <div id="horario" class="content-section active">
+            <div class="section-header">
+                <h2 class="section-title">Horario Diario Optimizado</h2>
+                <p class="section-subtitle">Rutina completa diseñada para maximizar tus resultados trabajando de 6am a 2pm</p>
+            </div>
+            
+            <div class="section-content">
+                <div class="highlight-box">
+                    <strong>Objetivo:</strong> Seguir este horario con precisión durante 12 semanas para obtener resultados excepcionales. La consistencia es más importante que la perfección.
+                </div>
+                
+                <div class="schedule-grid">
+                    <div class="time-block">
+                        <div class="time-header">4:30 AM - Despertar y Activación</div>
+                        <div class="activity-list">
+                            • <strong>Luces brillantes:</strong> Inmediatamente al despertar para activar ritmo circadiano<br>
+                            • <strong>Hidratación:</strong> 500ml de agua para combatir deshidratación nocturna<br>
+                            • <strong>Movimiento suave:</strong> 5 minutos de estiramiento ligero<br>
+                            • <strong>Respiración:</strong> 3 minutos de respiración profunda para oxigenación
+                        </div>
+                    </div>
+                    
+                    <div class="time-block">
+                        <div class="time-header">4:45-5:15 AM - Desayuno Estratégico</div>
+                        <div class="activity-list">
+                            <strong>Opción 1 (Tradicional):</strong> Arepa rellena + 2 huevos revueltos + ½ aguacate + café con leche (480 cal, 28g proteína)<br><br>
+                            <strong>Opción 2 (Proteica):</strong> Revuelto de 3 huevos + 100g arroz + 50g frijoles negros (520 cal, 32g proteína)<br><br>
+                            <strong>Opción 3 (Rápida):</strong> Batido con 30g proteína whey + avena + mantequilla de maní + banana (510 cal, 35g proteína)
+                        </div>
+                    </div>
+                    
+                    <div class="time-block">
+                        <div class="time-header">5:15-5:30 AM - Protocolo de Suplementos Matutinos</div>
+                        <div class="activity-list">
+                            • <strong>Vitamina D3:</strong> 4,000 IU + K2 100mcg (con las grasas del desayuno)<br>
+                            • <strong>Complejo B:</strong> Alta potencia para energía y metabolismo<br>
+                            • <strong>Ashwagandha:</strong> 300mg (primera dosis del día)<br>
+                            • <strong>Importante:</strong> Tomar siempre con comida que contenga grasas
+                        </div>
+                    </div>
+                    
+                    <div class="time-block">
+                        <div class="time-header">5:30-5:45 AM - Preparación para el Trabajo</div>
+                        <div class="activity-list">
+                            • <strong>Empacar snacks:</strong> Barras de proteína, nueces, fruta<br>
+                            • <strong>Hidratación:</strong> Llenar botella de 1L para el trabajo<br>
+                            • <strong>Mentalización:</strong> Revisar 3 prioridades principales del día<br>
+                            • <strong>Organización:</strong> Verificar que tienes todo para el gym
+                        </div>
+                    </div>
+                    
+                    <div class="time-block">
+                        <div class="time-header">6:00 AM-2:00 PM - Jornada Laboral Optimizada</div>
+                        <div class="activity-list">
+                            • <strong>8:30 AM - Mid-morning:</strong> Yogurt griego (200g) + frutas del bosque + almendras (15 unidades)<br>
+                            • <strong>10:00 AM:</strong> 250ml agua + caminata de 5 minutos si es posible<br>
+                            • <strong>12:00 PM - Almuerzo:</strong> 150g pechuga de pollo + 150g arroz + vegetales mixtos + 10ml aceite de oliva<br>
+                            • <strong>Hidratación continua:</strong> 250ml agua cada hora durante toda la jornada<br>
+                            • <strong>1:30 PM:</strong> Preparación mental para el entrenamiento, visualización positiva
+                        </div>
+                    </div>
+                    
+                    <div class="time-block">
+                        <div class="time-header">2:00-2:30 PM - Transición Trabajo-Entrenamiento</div>
+                        <div class="activity-list">
+                            • <strong>2:00-2:15 PM:</strong> Descompresión con 5-10 minutos de respiración profunda<br>
+                            • <strong>2:15-2:30 PM:</strong> Combustible pre-entreno: 1 banana grande + 1 cucharada miel (169 cal, 43g carbohidratos)<br>
+                            • <strong>Alternativa:</strong> 200ml leche con chocolate<br>
+                            • <strong>Hidratación:</strong> 250-500ml agua para preparar el cuerpo
+                        </div>
+                    </div>
+                    
+                    <div class="time-block">
+                        <div class="time-header">2:30-3:00 PM - Preparación Pre-Entrenamiento</div>
+                        <div class="activity-list">
+                            • <strong>Suplementos:</strong> Creatina 5g (si no la tomas post-entreno)<br>
+                            • <strong>Cafeína opcional:</strong> 100-200mg si necesitas energía extra<br>
+                            • <strong>Cambio de ropa:</strong> Vestimenta adecuada para entrenar<br>
+                            • <strong>Mentalización:</strong> Visualizar el entrenamiento, establecer objetivos de la sesión<br>
+                            • <strong>Música motivacional:</strong> Playlist preparada para activar el sistema nervioso
+                        </div>
+                    </div>
+                    
+                    <div class="time-block">
+                        <div class="time-header">3:00-4:30 PM - Sesión de Entrenamiento</div>
+                        <div class="activity-list">
+                            • <strong>3:00-3:15 PM:</strong> Calentamiento dinámico completo (movilidad articular + activación muscular)<br>
+                            • <strong>3:15-4:15 PM:</strong> Entrenamiento principal siguiendo rutina 4 días upper/lower<br>
+                            • <strong>4:15-4:30 PM:</strong> Enfriamiento con estiramiento estático y técnicas de respiración<br>
+                            • <strong>Hidratación durante:</strong> 125-250ml agua cada 15-20 minutos<br>
+                            • <strong>Foco mental:</strong> Progresión gradual, forma perfecta sobre peso
+                        </div>
+                    </div>
+                    
+                    <div class="time-block">
+                        <div class="time-header">4:30-5:00 PM - Ventana de Recuperación Post-Entreno</div>
+                        <div class="activity-list">
+                            • <strong>Batido inmediato:</strong> 30g proteína whey + 1 banana + 1 cucharada miel (305 cal, 35g proteína)<br>
+                            • <strong>Rehidratación:</strong> 500ml agua con electrolitos si sudaste mucho<br>
+                            • <strong>Creatina:</strong> 5g si no la tomaste antes del entreno<br>
+                            • <strong>Estiramiento adicional:</strong> 10 minutos enfocado en músculos trabajados<br>
+                            • <strong>Evaluación:</strong> Calificar la sesión del 1-10 para progreso
+                        </div>
+                    </div>
+                    
+                    <div class="time-block">
+                        <div class="time-header">5:00-6:30 PM - Cena Principal de Recuperación</div>
+                        <div class="activity-list">
+                            <strong>Opción 1 (Tradicional):</strong> 150g carne asada + 150g arroz + 100g frijoles + ensalada con aguacate (727 cal, 63g proteína)<br><br>
+                            <strong>Opción 2 (Pollo):</strong> 180g muslo de pollo guisado + 150g arroz + 100g plátano maduro + ensalada (695 cal, 58g proteína)<br><br>
+                            <strong>Opción 3 (Pescado):</strong> 200g trucha + 200g papa criolla + vegetales al vapor con aceite de oliva (650 cal, 55g proteína)
+                        </div>
+                    </div>
+                    
+                    <div class="time-block">
+                        <div class="time-header">6:30-8:30 PM - Tiempo Social y Meal Prep</div>
+                        <div class="activity-list">
+                            • <strong>6:30-7:30 PM:</strong> Tiempo de calidad con familia/amigos sin dispositivos<br>
+                            • <strong>7:30-8:30 PM:</strong> Preparación de comidas del día siguiente<br>
+                            • <strong>Organización:</strong> Llenar botellas de agua, empacar suplementos<br>
+                            • <strong>Actividades ligeras:</strong> Caminata suave, lectura, actividades relajantes
+                        </div>
+                    </div>
+                    
+                    <div class="time-block">
+                        <div class="time-header">8:30-9:30 PM - Recuperación y Relajación</div>
+                        <div class="activity-list">
+                            • <strong>Actividad física suave:</strong> Caminata de 15-20 minutos o yoga ligero<br>
+                            • <strong>Foam rolling:</strong> 10-15 minutos enfocado en músculos tensos<br>
+                            • <strong>Reducción de estimulación:</strong> Comenzar a bajar intensidad de luces<br>
+                            • <strong>Snack nocturno:</strong> 2 rebanadas pan integral + 2 cucharadas mantequilla de maní + 1 vaso leche (377 cal, 20g proteína)
+                        </div>
+                    </div>
+                    
+                    <div class="time-block">
+                        <div class="time-header">9:30-10:30 PM - Protocolo de Preparación para el Sueño</div>
+                        <div class="activity-list">
+                            • <strong>9:30-9:45 PM:</strong> Suplementos nocturnos (Magnesio 300-400mg, Zinc 15-30mg, Ashwagandha 300mg, Omega-3 1-2g)<br>
+                            • <strong>9:45-10:15 PM:</strong> Rutina de relajación (luces tenues, lectura ligera, evitar pantallas)<br>
+                            • <strong>10:15-10:30 PM:</strong> Preparación final del dormitorio (oscuridad total, temperatura 18-21°C, ruido blanco)<br>
+                            • <strong>10:30 PM:</strong> Hora de dormir objetivo (mínimo 6 horas para despertar a las 4:30 AM)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SUPLEMENTOS -->
+        <div id="suplementos" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Protocolo Completo de Suplementación</h2>
+                <p class="section-subtitle">Sistema optimizado de suplementos basado en evidencia científica para maximizar resultados</p>
+            </div>
+            
+            <div class="section-content">
+                <div class="highlight-box">
+                    <strong>Importancia crítica:</strong> Tomar exactamente como se indica, nunca saltear dosis. Comprar únicamente en farmacias certificadas como Farmatodo, Cruz Verde, o Locatel para garantizar calidad y autenticidad.
+                </div>
+                
+                <div class="supplement-grid">
+                    <div class="supplement-card">
+                        <div class="supplement-name">Vitamina D3 + K2 (Sinergia Hormonal)</div>
+                        <div class="supplement-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Dosis exacta</span>
+                                <span class="detail-value">4,000 IU D3 + 100mcg K2</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Horario óptimo</span>
+                                <span class="detail-value">5:15 AM con desayuno</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Beneficios clave</span>
+                                <span class="detail-value">Testosterona +25%, absorción calcio</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Costo mensual</span>
+                                <span class="detail-value">~35,000 COP</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Dónde comprar</span>
+                                <span class="detail-value">Farmatodo, Cruz Verde</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Nota importante</span>
+                                <span class="detail-value">SIEMPRE con grasas para absorción</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="supplement-card">
+                        <div class="supplement-name">Creatina Monohidrato (Rendimiento)</div>
+                        <div class="supplement-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Fase de carga</span>
+                                <span class="detail-value">20g/día × 7 días (4 dosis de 5g)</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Mantenimiento</span>
+                                <span class="detail-value">5g diarios de por vida</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Mejor horario</span>
+                                <span class="detail-value">Post-entreno con carbohidratos</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Beneficios</span>
+                                <span class="detail-value">Fuerza +15%, masa muscular +1.5kg</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Costo mensual</span>
+                                <span class="detail-value">~30,000 COP</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Forma preferida</span>
+                                <span class="detail-value">Monohidrato puro, sin aditivos</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="supplement-card">
+                        <div class="supplement-name">Proteína Whey (Construcción Muscular)</div>
+                        <div class="supplement-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Dosis por porción</span>
+                                <span class="detail-value">25-30g proteína pura</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Frecuencia</span>
+                                <span class="detail-value">Post-entreno + 1-2 snacks</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Meta diaria total</span>
+                                <span class="detail-value">152g proteína (todas las fuentes)</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Ventana post-entreno</span>
+                                <span class="detail-value">Dentro de 2 horas (óptimo 30 min)</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Costo mensual</span>
+                                <span class="detail-value">~80,000 COP</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Calidad requerida</span>
+                                <span class="detail-value">Concentrado o aislado, sin azúcar</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="supplement-card">
+                        <div class="supplement-name">Magnesio Glicinato (Sueño y Recuperación)</div>
+                        <div class="supplement-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Dosis nocturna</span>
+                                <span class="detail-value">300-400mg</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Timing preciso</span>
+                                <span class="detail-value">30-60 min antes de dormir</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Beneficios primarios</span>
+                                <span class="detail-value">Sueño profundo, recuperación muscular</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Forma específica</span>
+                                <span class="detail-value">Glicinato (mejor absorción)</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Costo mensual</span>
+                                <span class="detail-value">~40,000 COP</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Efectos secundarios</span>
+                                <span class="detail-value">Posible somnolencia (esperada)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="supplement-card">
+                        <div class="supplement-name">Ashwagandha KSM-66 (Adaptógeno Premium)</div>
+                        <div class="supplement-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Dosis diaria total</span>
+                                <span class="detail-value">600mg (300mg AM + 300mg PM)</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Horarios específicos</span>
+                                <span class="detail-value">5:15 AM y 9:30 PM</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Beneficios clave</span>
+                                <span class="detail-value">Testosterona +14%, cortisol -23%</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Protocolo de ciclo</span>
+                                <span class="detail-value">8-12 semanas ON, 2-4 semanas OFF</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Costo mensual</span>
+                                <span class="detail-value">~50,000 COP</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Extrato requerido</span>
+                                <span class="detail-value">SOLO KSM-66 (patentado)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="supplement-card">
+                        <div class="supplement-name">Zinc Picolinato (Testosterona y Inmunidad)</div>
+                        <div class="supplement-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Dosis óptima</span>
+                                <span class="detail-value">15-30mg (según deficiencia)</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Mejor absorción</span>
+                                <span class="detail-value">Estómago vacío, 2h antes/después comida</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Horario recomendado</span>
+                                <span class="detail-value">9:30 PM (con magnesio)</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Balance de cobre</span>
+                                <span class="detail-value">+2mg cobre si tomas 30mg zinc</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Costo mensual</span>
+                                <span class="detail-value">~25,000 COP</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Forma preferida</span>
+                                <span class="detail-value">Picolinato (absorción superior)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="highlight-box" style="text-align: center; margin-top: 40px;">
+                    <strong>Inversión Total en Salud: ~260,000 COP/mes</strong><br>
+                    Equivale a menos de 9,000 COP diarios para optimización hormonal y rendimiento máximo
+                </div>
+            </div>
+        </div>
+        
+        <!-- ENTRENAMIENTOS -->
+        <div id="entrenamientos" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Sistema de Entrenamiento 4 Días</h2>
+                <p class="section-subtitle">Rutina upper/lower optimizada para ganancia muscular y fuerza en tu horario específico</p>
+            </div>
+            
+            <div class="section-content">
+                <div class="highlight-box">
+                    <strong>Cronograma semanal:</strong> Lunes/Jueves (Tren superior) • Martes/Viernes (Tren inferior) • Miércoles/Sábado/Domingo (Descanso activo)
+                </div>
+                
+                <div class="workout-grid">
+                    <div class="workout-day">
+                        <h3 class="workout-title">LUNES - Tren Superior A (Énfasis Push)</h3>
+                        <div class="exercise-list">
+                            <div class="exercise">
+                                <span class="exercise-number">1.</span> <strong>Press de Banca con Barra</strong><br>
+                                4 series × 5-6 repeticiones • Descanso: 3-5 minutos<br>
+                                <em>Ejercicio principal para pecho, hombros y tríceps</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">2.</span> <strong>Press Militar de Pie</strong><br>
+                                3 series × 6-8 repeticiones • Descanso: 3-4 minutos<br>
+                                <em>Desarrollo integral de hombros y core</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">3.</span> <strong>Press Inclinado con Mancuernas</strong><br>
+                                3 series × 8-10 repeticiones • Descanso: 2-3 minutos<br>
+                                <em>Pecho superior y estabilización</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">4.</span> <strong>Elevaciones Laterales</strong><br>
+                                3 series × 12-15 repeticiones • Descanso: 90 segundos<br>
+                                <em>Deltoides medial para anchura de hombros</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">5.</span> <strong>Press de Banca Agarre Cerrado</strong><br>
+                                3 series × 8-10 repeticiones • Descanso: 2-3 minutos<br>
+                                <em>Tríceps y pecho interno</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">6.</span> <strong>Extensiones de Tríceps en Polea</strong><br>
+                                3 series × 12-15 repeticiones • Descanso: 90 segundos<br>
+                                <em>Aislamiento de tríceps</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">7.</span> <strong>Face Pulls</strong><br>
+                                3 series × 15-20 repeticiones • Descanso: 60 segundos<br>
+                                <em>Deltoides posterior y salud postural</em>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="workout-day">
+                        <h3 class="workout-title">MARTES - Tren Inferior A (Énfasis Cuádriceps)</h3>
+                        <div class="exercise-list">
+                            <div class="exercise">
+                                <span class="exercise-number">1.</span> <strong>Sentadilla Trasera</strong><br>
+                                4 series × 5-6 repeticiones • Descanso: 3-5 minutos<br>
+                                <em>Rey de ejercicios, desarrollo completo de piernas</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">2.</span> <strong>Peso Muerto Rumano</strong><br>
+                                3 series × 8-10 repeticiones • Descanso: 2-3 minutos<br>
+                                <em>Isquiosurales y glúteos, flexibilidad posterior</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">3.</span> <strong>Sentadilla Búlgara</strong><br>
+                                3 series × 10-12 por pierna • Descanso: 2 minutos<br>
+                                <em>Unilateral para equilibrio y fuerza individual</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">4.</span> <strong>Prensa de Piernas</strong><br>
+                                3 series × 15-20 repeticiones • Descanso: 90 segundos<br>
+                                <em>Volumen adicional para cuádriceps</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">5.</span> <strong>Zancadas Caminando</strong><br>
+                                3 series × 12 por pierna • Descanso: 90 segundos<br>
+                                <em>Funcionalidad y estabilidad dinámica</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">6.</span> <strong>Elevaciones de Pantorrilla</strong><br>
+                                4 series × 15-20 repeticiones • Descanso: 60 segundos<br>
+                                <em>Desarrollo de gemelos y sóleo</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">7.</span> <strong>Plancha</strong><br>
+                                3 series × 30-60 segundos<br>
+                                <em>Core y estabilidad central</em>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="workout-day">
+                        <h3 class="workout-title">JUEVES - Tren Superior B (Énfasis Pull)</h3>
+                        <div class="exercise-list">
+                            <div class="exercise">
+                                <span class="exercise-number">1.</span> <strong>Peso Muerto Convencional</strong><br>
+                                4 series × 5-6 repeticiones • Descanso: 3-5 minutos<br>
+                                <em>Movimiento compuesto total, cadena posterior</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">2.</span> <strong>Dominadas / Jalones al Pecho</strong><br>
+                                4 series × 6-10 repeticiones • Descanso: 2-3 minutos<br>
+                                <em>Dorsal ancho y anchura de espalda</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">3.</span> <strong>Remo con Barra</strong><br>
+                                3 series × 8-10 repeticiones • Descanso: 2-3 minutos<br>
+                                <em>Espesor de espalda y romboides</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">4.</span> <strong>Remo Sentado en Cable</strong><br>
+                                3 series × 10-12 repeticiones • Descanso: 90 segundos<br>
+                                <em>Dorsal medio y retracción escapular</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">5.</span> <strong>Curl de Bíceps con Barra</strong><br>
+                                3 series × 8-10 repeticiones • Descanso: 90 segundos<br>
+                                <em>Bíceps braquial y fuerza de agarre</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">6.</span> <strong>Curl Martillo</strong><br>
+                                3 series × 10-12 repeticiones • Descanso: 90 segundos<br>
+                                <em>Braquiorradial y bíceps lateral</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">7.</span> <strong>Encogimientos de Hombros</strong><br>
+                                3 series × 12-15 repeticiones • Descanso: 90 segundos<br>
+                                <em>Trapecio superior y cuello</em>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="workout-day">
+                        <h3 class="workout-title">VIERNES - Tren Inferior B (Énfasis Cadera/Isquiosurales)</h3>
+                        <div class="exercise-list">
+                            <div class="exercise">
+                                <span class="exercise-number">1.</span> <strong>Peso Muerto Sumo</strong><br>
+                                4 series × 5-6 repeticiones • Descanso: 3-5 minutos<br>
+                                <em>Variante que enfatiza glúteos e aductores</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">2.</span> <strong>Hip Thrust con Barra</strong><br>
+                                3 series × 10-12 repeticiones • Descanso: 2-3 minutos<br>
+                                <em>Glúteo mayor y potencia de cadera</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">3.</span> <strong>Peso Muerto Piernas Rígidas</strong><br>
+                                3 series × 10-12 repeticiones • Descanso: 2 minutos<br>
+                                <em>Isquiosurales y flexibilidad posterior</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">4.</span> <strong>Curl Femoral en Máquina</strong><br>
+                                3 series × 12-15 repeticiones • Descanso: 90 segundos<br>
+                                <em>Aislamiento de isquiosurales</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">5.</span> <strong>Sentadilla Goblet</strong><br>
+                                3 series × 15-20 repeticiones • Descanso: 90 segundos<br>
+                                <em>Patrón de sentadilla y resistencia muscular</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">6.</span> <strong>Puente de Glúteo Una Pierna</strong><br>
+                                3 series × 12 por lado • Descanso: 60 segundos<br>
+                                <em>Activación unilateral de glúteos</em>
+                            </div>
+                            <div class="exercise">
+                                <span class="exercise-number">7.</span> <strong>Elevaciones Pantorrilla Sentado</strong><br>
+                                4 series × 15-20 repeticiones • Descanso: 60 segundos<br>
+                                <em>Sóleo y desarrollo integral de pantorrillas</em>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="highlight-box">
+                    <strong>Sistema de Progresión Semanal:</strong><br>
+                    • <strong>Semana 1:</strong> Establecer pesos base con técnica perfecta<br>
+                    • <strong>Semana 2:</strong> +2.5kg ejercicios tren superior, +5kg tren inferior<br>
+                    • <strong>Semana 3:</strong> +2.5kg ejercicios tren superior, +5kg tren inferior<br>
+                    • <strong>Semana 4:</strong> Descarga -30% peso, mantener repeticiones para recuperación<br>
+                    <strong>Principio fundamental:</strong> Progresión gradual y constante supera intentos extremos inconsistentes
+                </div>
+            </div>
+        </div>
+        
+        <!-- COMIDAS -->
+        <div id="comidas" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Plan Alimentario Completo</h2>
+                <p class="section-subtitle">Nutrición estratégica con ingredientes locales colombianos para maximizar ganancia muscular</p>
+            </div>
+            
+            <div class="section-content">
+                <div class="highlight-box">
+                    <strong>Objetivos nutricionales diarios:</strong> 2,950 calorías • 152g proteína (2.2g/kg) • 350g carbohidratos • 85g grasas saludables
+                </div>
+                
+                <div class="meal-grid">
+                    <div class="meal-card">
+                        <div class="meal-time">🌅 Desayuno - 4:45 AM</div>
+                        <div class="meal-content">
+                            <strong>Opción 1 (Tradicional Paisa):</strong><br>
+                            • 1 arepa grande (60g masarepa)<br>
+                            • 2 huevos revueltos en aceite de oliva<br>
+                            • ½ aguacate mediano<br>
+                            • Café con leche entera (150ml)<br><br>
+                            <strong>Preparación:</strong> 8-10 minutos<br>
+                            <strong>Tip:</strong> Preparar arepa la noche anterior
+                        </div>
+                        <div class="meal-macros">510 cal • 30g proteína • 42g carbos • 18g grasa</div>
+                    </div>
+                    
+                    <div class="meal-card">
+                        <div class="meal-time">🥤 Snack Matutino - 8:30 AM</div>
+                        <div class="meal-content">
+                            • Yogurt griego natural (200g)<br>
+                            • Frutos rojos mixtos (80g)<br>
+                            • Almendras naturales (15 unidades)<br><br>
+                            <strong>Alternativa:</strong> Manzana + 2 cucharadas mantequilla de almendras<br>
+                            <strong>Preparación:</strong> 2 minutos
+                        </div>
+                        <div class="meal-macros">250 cal • 15g proteína • 18g carbos • 12g grasa</div>
+                    </div>
+                    
+                    <div class="meal-card">
+                        <div class="meal-time">🍗 Almuerzo Estratégico - 12:00 PM</div>
+                        <div class="meal-content">
+                            <strong>Base Proteica:</strong><br>
+                            • 150g pechuga de pollo a la plancha<br>
+                            • 150g arroz blanco cocido<br>
+                            • 100g vegetales mixtos salteados<br>
+                            • 10ml aceite de oliva extra virgen<br><br>
+                            <strong>Condimentos:</strong> Sal, pimienta, ajo, cebolla
+                        </div>
+                        <div class="meal-macros">588 cal • 45g proteína • 58g carbos • 14g grasa</div>
+                    </div>
+                    
+                    <div class="meal-card">
+                        <div class="meal-time">🍌 Pre-Entreno - 2:15 PM</div>
+                        <div class="meal-content">
+                            • 1 banana grande madura<br>
+                            • 1 cucharada miel de abejas<br>
+                            • 250-500ml agua<br><br>
+                            <strong>Alternativa:</strong> 200ml leche con chocolate<br>
+                            <strong>Timing:</strong> 15-30 minutos antes del entreno
+                        </div>
+                        <div class="meal-macros">169 cal • 2g proteína • 43g carbos • 1g grasa</div>
+                    </div>
+                    
+                    <div class="meal-card">
+                        <div class="meal-time">💪 Post-Entreno - 4:30 PM</div>
+                        <div class="meal-content">
+                            <strong>Batido de Recuperación:</strong><br>
+                            • 30g proteína whey<br>
+                            • 1 banana mediana<br>
+                            • 1 cucharada miel<br>
+                            • 300ml agua fría<br><br>
+                            <strong>Timing crítico:</strong> Dentro de 30 minutos post-entreno
+                        </div>
+                        <div class="meal-macros">305 cal • 35g proteína • 38g carbos • 2g grasa</div>
+                    </div>
+                    
+                    <div class="meal-card">
+                        <div class="meal-time">🥩 Cena Principal - 5:30 PM</div>
+                        <div class="meal-content">
+                            <strong>Opción 1 (Bandeja Paisa Modificada):</strong><br>
+                            • 150g carne asada magra<br>
+                            • 150g arroz blanco<br>
+                            • 100g frijoles antioqueños<br>
+                            • Ensalada pequeña con aguacate<br><br>
+                            <strong>Opción 2 (Pollo Guisado):</strong><br>
+                            • 180g muslo de pollo sin piel<br>
+                            • 150g arroz<br>
+                            • 100g plátano maduro<br>
+                            • Ensalada mixta
+                        </div>
+                        <div class="meal-macros">751 cal • 55g proteína • 72g carbos • 22g grasa</div>
+                    </div>
+                    
+                    <div class="meal-card">
+                        <div class="meal-time">🌙 Snack Nocturno - 8:30 PM</div>
+                        <div class="meal-content">
+                            • 2 rebanadas pan integral<br>
+                            • 2 cucharadas mantequilla de maní natural<br>
+                            • 1 vaso leche entera (250ml)<br><br>
+                            <strong>Alternativa:</strong> Yogurt griego + granola + nueces<br>
+                            <strong>Beneficio:</strong> Proteína de digestión lenta para la noche
+                        </div>
+                        <div class="meal-macros">377 cal • 20g proteína • 35g carbos • 18g grasa</div>
+                    </div>
+                </div>
+                
+                <div class="highlight-box" style="text-align: center; margin-top: 40px;">
+                    <strong>TOTAL DIARIO: 2,950 calorías • 152g proteína • 351g carbohidratos • 85g grasas</strong><br>
+                    Distribución perfecta para crecimiento muscular y recuperación óptima
+                </div>
+            </div>
+        </div>
+        
+        <!-- COMPRAS -->
+        <div id="compras" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Guía Estratégica de Compras Medellín</h2>
+                <p class="section-subtitle">Optimización de presupuesto con ubicaciones específicas y estrategias de ahorro</p>
+            </div>
+            
+            <div class="section-content">
+                <div class="highlight-box">
+                    <strong>Presupuesto semanal optimizado:</strong> 100,000 COP • <strong>Mejor día de compras:</strong> Martes 6:00-8:00 AM en Plaza Minorista • <strong>Ahorro potencial:</strong> 35-50% vs supermercados tradicionales
+                </div>
+                
+                <div class="shopping-grid">
+                    <div class="store-section">
+                        <div class="store-header">
+                            <div class="store-name">🏪 Plaza Minorista José María Villa</div>
+                            <div class="store-budget">40,000 COP</div>
+                        </div>
+                        <div class="store-info">
+                            📍 <strong>Ubicación:</strong> Calle 55 #57-80, La Candelaria (Metro Parque Berrío + 5 min caminata)<br>
+                            ⏰ <strong>Horarios:</strong> Lun-Sáb 4:30AM-6:00PM, Dom 4:30AM-3:00PM<br>
+                            🎯 <strong>Estrategia:</strong> Ir martes temprano (6-8 AM) para mejor selección y precios
+                        </div>
+                        <div class="item-grid">
+                            <div class="item">
+                                <span class="item-name">2kg pollo mixto (pechuga + muslo)</span>
+                                <span class="item-price">24,000</span>
+                            </div>
+                            <div class="item">
+                                <span class="item-name">30 huevos AA extra grandes</span>
+                                <span class="item-price">8,200</span>
+                            </div>
+                            <div class="item">
+                                <span class="item-name">1kg carne molida magra</span>
+                                <span class="item-price">7,800</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="store-section">
+                        <div class="store-header">
+                            <div class="store-name">🏬 Tiendas D1</div>
+                            <div class="store-budget">25,000 COP</div>
+                        </div>
+                        <div class="store-info">
+                            📍 <strong>Ubicaciones:</strong> 90+ tiendas en toda la ciudad<br>
+                            💰 <strong>Ahorro promedio:</strong> 35% comparado con Éxito<br>
+                            🛍️ <strong>Tip:</strong> Llevar bolsas propias, pagos en efectivo preferidos
+                        </div>
+                        <div class="item-grid">
+                            <div class="item">
+                                <span class="item-name">3kg arroz Diana premium</span>
+                                <span class="item-price">10,500</span>
+                            </div>
+                            <div class="item">
+                                <span class="item-name">2kg harina masarepa</span>
+                                <span class="item-price">8,000</span>
+                            </div>
+                            <div class="item">
+                                <span class="item-name">1kg avena en hojuelas</span>
+                                <span class="item-price">4,000</span>
+                            </div>
+                            <div class="item">
+                                <span class="item-name">Bananos + plátanos (racimo)</span>
+                                <span class="item-price">2,500</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="store-section">
+                        <div class="store-header">
+                            <div class="store-name">🏭 Makro (Compras Mensuales)</div>
+                            <div class="store-budget">20,000 COP</div>
+                        </div>
+                        <div class="store-info">
+                            📍 <strong>Poblado:</strong> Calle 10 #50-171 (5 min caminando desde Metro Poblado)<br>
+                            📍 <strong>Suramericana:</strong> Carrera 65 #8-95<br>
+                            🆓 <strong>Membresía:</strong> Gratuita con cédula o pasaporte
+                        </div>
+                        <div class="item-grid">
+                            <div class="item">
+                                <span class="item-name">Vegetales mixtos congelados (2kg)</span>
+                                <span class="item-price">8,000</span>
+                            </div>
+                            <div class="item">
+                                <span class="item-name">5 aguacates Hass grandes</span>
+                                <span class="item-price">7,000</span>
+                            </div>
+                            <div class="item">
+                                <span class="item-name">Frutas de temporada mixtas</span>
+                                <span class="item-price">5,000</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="store-section">
+                        <div class="store-header">
+                            <div class="store-name">🛍️ Productos Complementarios</div>
+                            <div class="store-budget">15,000 COP</div>
+                        </div>
+                        <div class="store-info">
+                            🏪 <strong>Ubicaciones:</strong> D1, Justo & Bueno, tiendas de barrio<br>
+                            💡 <strong>Tip de ahorro:</strong> Comprar aceites y mantequillas en promociones mensuales
+                        </div>
+                        <div class="item-grid">
+                            <div class="item">
+                                <span class="item-name">Aceite de oliva extra virgen (500ml)</span>
+                                <span class="item-price">8,000</span>
+                            </div>
+                            <div class="item">
+                                <span class="item-name">Mantequilla de maní natural</span>
+                                <span class="item-price">4,500</span>
+                            </div>
+                            <div class="item">
+                                <span class="item-name">Leche entera + yogurt griego</span>
+                                <span class="item-price">2,500</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="highlight-box">
+                    <strong>Estrategias de Máximo Ahorro:</strong><br>
+                    • <strong>Plaza Minorista:</strong> 40% ahorro en carnes y pescados frescos<br>
+                    • <strong>D1/Justo & Bueno:</strong> 35% ahorro en productos básicos vs Éxito/Carulla<br>
+                    • <strong>Makro:</strong> 30% ahorro en compras de volumen mensual<br>
+                    • <strong>Evitar:</strong> Tiendas de El Poblado (sobreprecio 2-5%) y compras de último momento<br>
+                    • <strong>Días ideales:</strong> Martes y miércoles para mejores ofertas y frescura
+                </div>
+            </div>
+        </div>
+        
+        <!-- PROGRESO -->
+        <div id="progreso" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Sistema Integral de Seguimiento</h2>
+                <p class="section-subtitle">Metodología científica para monitorear y optimizar tu progreso continuamente</p>
+            </div>
+            
+            <div class="section-content">
+                <div class="progress-section">
+                    <h3 class="progress-title">📊 Métricas Diarias (Rutina Matutina)</h3>
+                    <div class="tracking-grid">
+                        <div class="track-item">
+                            <div class="track-title">⚖️ Peso Corporal</div>
+                            <div class="track-description">
+                                • <strong>Horario:</strong> 4:35 AM, después de ir al baño, antes de hidratarse<br>
+                                • <strong>Condiciones:</strong> Desnudo, misma báscula, mismo lugar<br>
+                                • <strong>Registro:</strong> Anotar variaciones y posibles causas<br>
+                                • <strong>Meta:</strong> +0.3-0.5kg por semana
+                            </div>
+                        </div>
+                        <div class="track-item">
+                            <div class="track-title">⚡ Niveles de Energía</div>
+                            <div class="track-description">
+                                • <strong>Escala:</strong> 1-10 (1=exhausto, 10=máxima energía)<br>
+                                • <strong>Momentos:</strong> Al despertar, antes del entreno, noche<br>
+                                • <strong>Factores:</strong> Calidad del sueño, estrés, nutrición<br>
+                                • <strong>Objetivo:</strong> Promedio semanal >7
+                            </div>
+                        </div>
+                        <div class="track-item">
+                            <div class="track-title">😴 Calidad del Sueño</div>
+                            <div class="track-description">
+                                • <strong>Horas dormidas:</strong> Objetivo mínimo 6 horas<br>
+                                • <strong>Calidad:</strong> 1-10 (profundidad, despertar reparado)<br>
+                                • <strong>Factores:</strong> Hora de acostarse, interrupciones<br>
+                                • <strong>Meta:</strong> 7+ calidad promedio
+                            </div>
+                        </div>
+                        <div class="track-item">
+                            <div class="track-title">💪 Rendimiento de Entrenamiento</div>
+                            <div class="track-description">
+                                • <strong>Pesos utilizados:</strong> Comparar con sesión anterior<br>
+                                • <strong>Repeticiones:</strong> Calidad vs cantidad<br>
+                                • <strong>Sensación:</strong> RPE (Rate of Perceived Exertion) 1-10<br>
+                                • <strong>Recuperación:</strong> Entre series y post-entreno
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="progress-section">
+                    <h3 class="progress-title">📐 Evaluaciones Semanales (Domingos)</h3>
+                    <div class="tracking-grid">
+                        <div class="track-item">
+                            <div class="track-title">📏 Medidas Corporales</div>
+                            <div class="track-description">
+                                • <strong>Circunferencias:</strong> Cintura, pecho, brazos relajados y flexionados, muslos<br>
+                                • <strong>Condiciones:</strong> Misma hora (domingo 7 AM), misma tensión de cinta<br>
+                                • <strong>Frecuencia:</strong> Cada domingo sin excepción<br>
+                                • <strong>Meta:</strong> +0.5-1cm brazos/muslos, estable cintura
+                            </div>
+                        </div>
+                        <div class="track-item">
+                            <div class="track-title">📸 Documentación Fotográfica</div>
+                            <div class="track-description">
+                                • <strong>Poses estándar:</strong> Frente, perfil derecho, espalda<br>
+                                • <strong>Condiciones:</strong> Misma iluminación, distancia, ropa<br>
+                                • <strong>Horario:</strong> Domingo 7 AM, después de medidas<br>
+                                • <strong>Almacenamiento:</strong> Carpeta organizada por fechas
+                            </div>
+                        </div>
+                        <div class="track-item">
+                            <div class="track-title">🏋️ Progresión de Fuerza</div>
+                            <div class="track-description">
+                                • <strong>Ejercicios clave:</strong> Sentadilla, peso muerto, press banca, press militar<br>
+                                • <strong>Seguimiento:</strong> Peso máximo por repeticiones completadas<br>
+                                • <strong>Comparación:</strong> Semana anterior y mes anterior<br>
+                                • <strong>Meta:</strong> Progresión consistente cada 2 semanas
+                            </div>
+                        </div>
+                        <div class="track-item">
+                            <div class="track-title">📈 Análisis de Tendencias</div>
+                            <div class="track-description">
+                                • <strong>Peso promedio:</strong> Calcular media de 7 días<br>
+                                • <strong>Tendencia:</strong> Comparar con semana anterior<br>
+                                • <strong>Consistencia:</strong> Adherencia al plan nutricional y entrenamiento<br>
+                                • <strong>Ajustes:</strong> Modificaciones necesarias para siguiente semana
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="progress-section">
+                    <h3 class="progress-title">🔬 Evaluaciones Mensuales (Primer Domingo)</h3>
+                    <div class="tracking-grid">
+                        <div class="track-item">
+                            <div class="track-title">📊 Composición Corporal</div>
+                            <div class="track-description">
+                                • <strong>DEXA Scan:</strong> Si presupuesto permite (150,000-200,000 COP)<br>
+                                • <strong>InBody:</strong> Alternativa más económica en gimnasios<br>
+                                • <strong>BodPod:</strong> Disponible en algunas universidades<br>
+                                • <strong>Meta:</strong> +0.5-1kg masa muscular, grasa estable
+                            </div>
+                        </div>
+                        <div class="track-item">
+                            <div class="track-title">🎯 Benchmarks de Rendimiento</div>
+                            <div class="track-description">
+                                • <strong>1RM estimados:</strong> Calcular basado en repeticiones máximas<br>
+                                • <strong>Resistencia:</strong> Máximo número dominadas, fondos<br>
+                                • <strong>Flexibilidad:</strong> Tests específicos para movilidad<br>
+                                • <strong>Funcionalidad:</strong> Salto vertical, agilidad
+                            </div>
+                        </div>
+                        <div class="track-item">
+                            <div class="track-title">🩺 Marcadores de Salud</div>
+                            <div class="track-description">
+                                • <strong>Análisis básico:</strong> Hemograma, perfil lipídico, glucosa<br>
+                                • <strong>Hormonales:</strong> Testosterona, cortisol (si presupuesto permite)<br>
+                                • <strong>Vitaminas:</strong> D3, B12, folato<br>
+                                • <strong>Frecuencia:</strong> Cada 3-6 meses
+                            </div>
+                        </div>
+                        <div class="track-item">
+                            <div class="track-title">🔄 Reajuste Estratégico</div>
+                            <div class="track-description">
+                                • <strong>Evaluación objetivos:</strong> Progreso vs metas establecidas<br>
+                                • <strong>Modificación plan:</strong> Ajustes nutricionales y entrenamiento<br>
+                                • <strong>Nuevas metas:</strong> Objetivos específicos para próximo mes<br>
+                                • <strong>Optimización:</strong> Identificar áreas de mejora
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="highlight-box">
+                    <strong>Herramientas Digitales Recomendadas:</strong><br>
+                    • <strong>MyFitnessPal:</strong> Registro de calorías y macronutrientes<br>
+                    • <strong>Strong:</strong> Seguimiento de entrenamientos y progresión<br>
+                    • <strong>Fitbit/Garmin:</strong> Monitoreo de actividad y sueño<br>
+                    • <strong>Spreadsheet personalizado:</strong> Integración de todas las métricas<br>
+                    • <strong>Google Photos:</strong> Almacenamiento seguro de fotos de progreso
+                </div>
+            </div>
+        </div>
+        
+        <!-- EMERGENCIAS -->
+        <div id="emergencias" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Protocolos de Contingencia</h2>
+                <p class="section-subtitle">Planes de emergencia para mantener el progreso ante cualquier situación imprevista</p>
+            </div>
+            
+            <div class="section-content">
+                <div class="emergency-grid">
+                    <div class="emergency-card">
+                        <div class="emergency-title">🚨 Protocolo de Lesiones</div>
+                        <div class="emergency-content">
+                            <strong>PREVENCIÓN PRIMARIA:</strong><br>
+                            • Calentamiento obligatorio de 15 minutos mínimo<br>
+                            • Progresión gradual: máximo 2.5kg/semana en ejercicios principales<br>
+                            • Técnica perfecta antes que peso elevado<br>
+                            • Descanso adecuado entre entrenamientos<br><br>
+                            
+                            <strong>SI OCURRE LESIÓN:</strong><br>
+                            • <strong>Primeras 72 horas:</strong> Protocolo PEACE (Proteger, Elevar, Evitar antiinflamatorios, Comprimir, Educar)<br>
+                            • <strong>Lesión menor:</strong> Modificar ejercicios, entrenar músculos no afectados<br>
+                            • <strong>Lesión moderada:</strong> Consulta médica, fisioterapia, 1-3 semanas recuperación<br>
+                            • <strong>Regreso gradual:</strong> 50% peso anterior, progresión conservadora<br><br>
+                            
+                            <strong>ENTRENAMIENTOS ALTERNATIVOS:</strong><br>
+                            • Lesión hombro: Enfoque en piernas y core<br>
+                            • Lesión espalda: Ejercicios isométricos y movilidad<br>
+                            • Lesión rodilla: Entrenamiento de tren superior y natación
+                        </div>
+                    </div>
+                    
+                    <div class="emergency-card">
+                        <div class="emergency-title">⏰ Entrenamientos Perdidos</div>
+                        <div class="emergency-content">
+                            <strong>1-2 DÍAS PERDIDOS:</strong><br>
+                            • Reanudar cronograma normal inmediatamente<br>
+                            • No intentar "compensar" con entrenamientos dobles<br>
+                            • Mantener alimentación y suplementación constante<br><br>
+                            
+                            <strong>3-5 DÍAS PERDIDOS:</strong><br>
+                            • Reducir intensidad 20% en primera sesión de regreso<br>
+                            • Extender calentamiento a 20 minutos<br>
+                            • Priorizar movimientos compuestos sobre aislados<br><br>
+                            
+                            <strong>1 SEMANA O MÁS:</strong><br>
+                            • Retroceder 1-2 semanas en progresión de pesos<br>
+                            • Reintroducir ejercicios gradualmente<br>
+                            • Enfoque en técnica y rango de movimiento<br><br>
+                            
+                            <strong>ENTRENAMIENTOS DE VIAJE:</strong><br>
+                            • Rutina de hotel: Flexiones, sentadillas, burpees, plancha<br>
+                            • Parques públicos: Dominadas, fondos, sprints<br>
+                            • Bandas de resistencia: Kit de viaje completo
+                        </div>
+                    </div>
+                    
+                    <div class="emergency-card">
+                        <div class="emergency-title">🍽️ Crisis Nutricionales</div>
+                        <div class="emergency-content">
+                            <strong>OLVIDÉ MEAL PREP:</strong><br>
+                            • D1: Pollo rostizado + ensalada empacada<br>
+                            • Éxito: Sección de comidas preparadas saludables<br>
+                            • Restaurantes rápidos: Kokoriko (pechuga + ensalada)<br><br>
+                            
+                            <strong>OPCIONES DE COMIDA RÁPIDA SALUDABLE:</strong><br>
+                            • <strong>Betty's Bowls:</strong> Bowls personalizados con proteína<br>
+                            • <strong>SaludPan:</strong> Sandwiches integrales con pollo<br>
+                            • <strong>Freshii:</strong> Ensaladas y wraps saludables<br>
+                            • <strong>Crepes & Waffles:</strong> Ensaladas César con pollo<br><br>
+                            
+                            <strong>ESTRATEGIA EN RESTAURANTES:</strong><br>
+                            • Pedir proteína a la plancha (pollo, pescado, carne)<br>
+                            • Reemplazar fritos por arroz o ensalada<br>
+                            • Solicitar aderezos y salsas aparte<br>
+                            • Doble porción de vegetales<br><br>
+                            
+                            <strong>SNACKS DE EMERGENCIA:</strong><br>
+                            • Nueces mixtas (bolsas individuales)<br>
+                            • Yogurt griego natural<br>
+                            • Barras de proteína (>15g proteína)<br>
+                            • Huevos duros de tiendas de conveniencia
+                        </div>
+                    </div>
+                    
+                    <div class="emergency-card">
+                        <div class="emergency-title">💰 Restricciones de Presupuesto</div>
+                        <div class="emergency-content">
+                            <strong>ENTRENAMIENTO GRATUITO:</strong><br>
+                            • <strong>Parques con equipos:</strong> Lineal La Presidenta, Parque Arví<br>
+                            • <strong>Calistenia:</strong> Dominadas, flexiones, sentadillas, fondos<br>
+                            • <strong>Running:</strong> Circuito Río Medellín, Cerro Nutibara<br>
+                            • <strong>Escaleras:</strong> Subida a Pueblito Paisa<br><br>
+                            
+                            <strong>NUTRICIÓN ULTRA-ECONÓMICA:</strong><br>
+                            • <strong>Base proteica:</strong> Huevos (más económico) + pollo entero<br>
+                            • <strong>Carbohidratos:</strong> Arroz, avena, papa criolla<br>
+                            • <strong>Vegetales:</strong> Cebolla, tomate, zanahoria (básicos)<br>
+                            • <strong>Menú emergencia:</strong> <70,000 COP/semana<br><br>
+                            
+                            <strong>PRIORIZACIÓN DE SUPLEMENTOS:</strong><br>
+                            • <strong>Esencial:</strong> Solo proteína en polvo + creatina<br>
+                            • <strong>Opcional:</strong> Vitamina D3 (si hay presupuesto)<br>
+                            • <strong>Eliminar temporalmente:</strong> Ashwagandha, zinc, magnesio<br><br>
+                            
+                            <strong>EQUIPO BÁSICO CASERO:</strong><br>
+                            • <strong>Primera inversión:</strong> Bandas de resistencia (50,000 COP)<br>
+                            • <strong>Segunda opción:</strong> Mancuernas ajustables<br>
+                            • <strong>DIY:</strong> Galones de agua como pesas
+                        </div>
+                    </div>
+                    
+                    <div class="emergency-card">
+                        <div class="emergency-title">📈 Estancamientos y Plateaus</div>
+                        <div class="emergency-content">
+                            <strong>ESTANCAMIENTO EN FUERZA:</strong><br>
+                            • Semana de descarga inmediata (-40% volumen)<br>
+                            • Cambio de rep ranges (fuerza 3-5, hipertrofia 8-12)<br>
+                            • Variaciones de ejercicios (tempo, pausa, ángulos)<br>
+                            • Revisión de técnica con video o entrenador<br><br>
+                            
+                            <strong>ESTANCAMIENTO EN PESO:</strong><br>
+                            • Recalcular calorías basado en peso actual<br>
+                            • Aumentar 200-300 calorías por 2 semanas<br>
+                            • Revisar consistencia en tracking<br>
+                            • Considerar refeed days (días altos en carbos)<br><br>
+                            
+                            <strong>PÉRDIDA DE MOTIVACIÓN:</strong><br>
+                            • Cambio temporal de rutina (nuevos ejercicios)<br>
+                            • Entrenar con compañero o grupo<br>
+                            • Establecer mini-metas semanales<br>
+                            • Recordar fotos de progreso inicial<br><br>
+                            
+                            <strong>FALTA DE ENERGÍA PERSISTENTE:</strong><br>
+                            • Revisar calidad y cantidad de sueño<br>
+                            • Evaluar niveles de estrés laboral/personal<br>
+                            • Considerar análisis de sangre básico<br>
+                            • Aumentar días de descanso temporalmente
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CRONOGRAMA -->
+        <div id="cronograma" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Cronograma de Transformación</h2>
+                <p class="section-subtitle">Plan estructurado de 12 semanas con objetivos específicos y expectativas realistas</p>
+            </div>
+            
+            <div class="section-content">
+                <div class="timeline-grid">
+                    <div class="timeline-item">
+                        <div class="timeline-title">🏁 SEMANAS 1-2: Fundación y Adaptación</div>
+                        <div class="timeline-content">
+                            <strong>Objetivos primarios:</strong><br>
+                            • Establecer horario de sueño fijo (10:30 PM - 4:30 AM) sin excepción<br>
+                            • Implementar meal prep básico los domingos<br>
+                            • Familiarización con rutina de gimnasio<br>
+                            • Inicio de suplementación básica (D3, creatina)<br><br>
+                            
+                            <strong>Expectativas realistas:</strong><br>
+                            • Adaptación al nuevo horario (puede sentir fatiga inicial)<br>
+                            • Aprendizaje de técnica en ejercicios básicos<br>
+                            • Posible aumento de peso de 0.5-1kg (agua y glucógeno)<br>
+                            • Establecimiento de rutinas y hábitos<br><br>
+                            
+                            <strong>Métricas de éxito:</strong><br>
+                            • 90% adherencia al horario de sueño<br>
+                            • Completar 6 entrenamientos en 2 semanas<br>
+                            • Meal prep realizado 2 domingos consecutivos<br>
+                            • Suplementos tomados según protocolo
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-title">💪 SEMANAS 3-4: Intensificación del Entrenamiento</div>
+                        <div class="timeline-content">
+                            <strong>Objetivos de esta fase:</strong><br>
+                            • Iniciar programa de entrenamiento completo 4 días/semana<br>
+                            • Perfeccionar timing nutricional pre/post entreno<br>
+                            • Establecer tracking diario de peso y energía<br>
+                            • Primeras adaptaciones musculares visibles<br><br>
+                            
+                            <strong>Progresión esperada:</strong><br>
+                            • Incremento en pesos utilizados (10-20% ejercicios principales)<br>
+                            • Mejor recuperación entre entrenamientos<br>
+                            • Aumento de peso corporal 0.5-0.8kg por semana<br>
+                            • Mejora en calidad del sueño<br><br>
+                            
+                            <strong>Ajustes necesarios:</strong><br>
+                            • Afinar calorías basado en respuesta individual<br>
+                            • Optimizar timing de comidas según energía<br>
+                            • Modificar ejercicios que causen molestias<br>
+                            • Evaluar necesidad de día extra de descanso
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-title">🔥 SEMANAS 5-6: Optimización Completa</div>
+                        <div class="timeline-content">
+                            <strong>Implementación avanzada:</strong><br>
+                            • Agregar protocolo completo de suplementos<br>
+                            • Optimizar protocolo de recuperación (magnesio, zinc)<br>
+                            • Implementar técnicas avanzadas de entrenamiento<br>
+                            • Meal prep más sofisticado y variado<br><br>
+                            
+                            <strong>Resultados esperados:</strong><br>
+                            • Aumento notable en fuerza (15-25% vs semana 1)<br>
+                            • Cambios visibles en composición corporal<br>
+                            • Mejora significativa en energía y bienestar<br>
+                            • Rutinas completamente establecidas<br><br>
+                            
+                            <strong>Evaluación mid-point:</strong><br>
+                            • Fotos de progreso y medidas corporales<br>
+                            • Análisis de adherencia al plan<br>
+                            • Ajustes basados en resultados obtenidos<br>
+                            • Establecimiento de metas para fase final
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-title">⚡ SEMANAS 7-8: Refinamiento y Personalización</div>
+                        <div class="timeline-content">
+                            <strong>Personalización del programa:</strong><br>
+                            • Ajustes basados en respuesta individual<br>
+                            • Incorporación de técnicas avanzadas según progreso<br>
+                            • Optimización de ratios de macronutrientes<br>
+                            • Implementación de estrategias de periodización<br><br>
+                            
+                            <strong>Cambios evidentes:</strong><br>
+                            • Transformación corporal claramente visible<br>
+                            • Fuerza significativamente aumentada<br>
+                            • Energía y vitalidad optimizadas<br>
+                            • Confianza y motivación en su punto máximo<br><br>
+                            
+                            <strong>Preparación para fase final:</strong><br>
+                            • Evaluación completa de progreso<br>
+                            • Identificación de áreas de mejora<br>
+                            • Ajuste de expectativas para últimas 4 semanas<br>
+                            • Planificación de estrategias de mantenimiento
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-title">🎖️ SEMANAS 9-12: Consolidación y Planificación Futura</div>
+                        <div class="timeline-content">
+                            <strong>Consolidación de resultados:</strong><br>
+                            • Mantenimiento de todos los hábitos establecidos<br>
+                            • Perfeccionamiento de técnicas de entrenamiento<br>
+                            • Optimización final de la nutrición<br>
+                            • Evaluación integral de la transformación<br><br>
+                            
+                            <strong>Resultados finales esperados:</strong><br>
+                            • Aumento de peso total: 6-10kg (primarily muscle)<br>
+                            • Incremento de fuerza: 30-50% en ejercicios principales<br>
+                            • Transformación física evidente y measurable<br>
+                            • Hábitos sólidos establecidos para vida<br><br>
+                            
+                            <strong>Planificación del futuro:</strong><br>
+                            • Establecimiento de metas a 6-12 meses<br>
+                            • Desarrollo de plan de mantenimiento<br>
+                            • Consideración de objetivos avanzados<br>
+                            • Evaluación de necesidad de coaching especializado<br><br>
+                            
+                            <strong>Evaluación comprensiva final:</strong><br>
+                            • Análisis completo de composición corporal<br>
+                            • Comparación fotográfica before/after<br>
+                            • Evaluación de marcadores de salud<br>
+                            • Celebración de logros alcanzados
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="highlight-box">
+                    <strong>Expectativas Realistas de Resultados:</strong><br>
+                    • <strong>Mes 1:</strong> +1.5-2kg peso corporal, adaptación inicial<br>
+                    • <strong>Mes 2:</strong> +1-1.5kg adicional, cambios visibles evidentes<br>
+                    • <strong>Mes 3:</strong> +1-1.5kg adicional, transformación consolidada<br>
+                    • <strong>Total 12 semanas:</strong> 4-6kg ganancia muscular, 30-50% aumento fuerza<br><br>
+                    
+                    <strong>Clave del Éxito:</strong> Consistencia supera perfección. Seguir el plan 80% del tiempo produce mejores resultados que intentar el 100% y fallar frecuentemente.
+                </div>
+            </div>
+        </div>
+        
+        <div class="summary-box">
+            <h2 class="summary-title">🚀 Tu Transformación Empieza Ahora</h2>
+            <p class="summary-text">
+                Tienes en tus manos la guía más completa y detallada para transformar tu cuerpo y tu vida en 12 semanas.
+                Cada horario, cada comida, cada ejercicio ha sido diseñado específicamente para ti y tu situación en Medellín.
+            </p>
+            <p class="summary-text">
+                <strong>Recuerda:</strong> La consistencia es más poderosa que la perfección. 
+                Sigue esta guía con disciplina durante 12 semanas y verás una transformación que te sorprenderá.
+            </p>
+            <button class="cta-button" onclick="window.print()">🖨️ IMPRIMIR GUÍA COMPLETA</button>
+        </div>
+    </div>
+    
+    <script>
+        function showSection(sectionId) {
+            // Ocultar todas las secciones
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remover clase active de todos los botones
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Mostrar la sección seleccionada
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Agregar clase active al botón correspondiente
+            event.target.classList.add('active');
+        }
+        
+        // Animaciones de entrada
+        document.addEventListener('DOMContentLoaded', function() {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+            
+            // Observar elementos con clase fade-in
+            document.querySelectorAll('.fade-in').forEach(el => {
+                observer.observe(el);
+            });
+            
+            // Efectos de hover mejorados
+            const cards = document.querySelectorAll('.stat-card, .time-block, .supplement-card, .workout-day, .meal-card, .track-item');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+        
+        // Función para scroll suave entre secciones
+        function smoothScrollToSection(sectionId) {
+            document.getElementById(sectionId).scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+        
+        // Agregar funcionalidad de scroll al cambiar pestañas
+        const originalShowSection = showSection;
+        showSection = function(sectionId) {
+            originalShowSection(sectionId);
+            setTimeout(() => smoothScrollToSection(sectionId), 100);
+        };
+    </script>
+</body>
+</html>

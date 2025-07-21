@@ -1,0 +1,150 @@
+{
+  "name": "ios-automation-control-center",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Desktop application for iOS device automation and control",
+  "main": "./out/main/index.js",
+  "author": "Tinder Team",
+  "homepage": ".",
+  "scripts": {
+    "dev": "electron-vite dev --mode development",
+    "dev:fast": "cross-env NODE_ENV=development electron-vite dev",
+    "build": "electron-vite build",
+    "build:fast": "cross-env NODE_ENV=production electron-vite build",
+    "build:win": "npm run build:fast && electron-builder --win --publish=never",
+    "build:mac": "npm run build:fast && electron-builder --mac --publish=never",
+    "build:linux": "npm run build:fast && electron-builder --linux --publish=never",
+    "dist": "npm run build:fast && electron-builder --publish=never",
+    "dist:dir": "npm run build:fast && electron-builder --dir",
+    "dist:all": "npm run build:fast && electron-builder -mwl --publish=never",
+    "preview": "electron-vite preview",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "type-check": "tsc --noEmit",
+    "clean": "rimraf out dist",
+    "rebuild": "npm run clean && npm run build:fast",
+    "start": "node scripts/dev.cjs",
+    "build:script": "node scripts/build.cjs",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "lucide-react": "^0.344.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@electron-toolkit/preload": "^3.0.2",
+    "@electron-toolkit/utils": "^4.0.0",
+    "@eslint/js": "^9.9.1",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.18",
+    "babel-plugin-transform-remove-console": "^6.9.4",
+    "chalk": "^4.1.2",
+    "cross-env": "^7.0.3",
+    "electron": "^37.2.3",
+    "electron-builder": "^26.0.12",
+    "electron-vite": "^4.0.0",
+    "eslint": "^9.9.1",
+    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
+    "eslint-plugin-react-refresh": "^0.4.11",
+    "globals": "^15.9.0",
+    "postcss": "^8.5.6",
+    "postcss-loader": "^8.1.1",
+    "rimraf": "^6.0.1",
+    "rollup-plugin-visualizer": "^5.14.0",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^8.3.0",
+    "vite": "^5.4.2",
+    "vite-plugin-eslint": "^1.8.1"
+  },
+  "build": {
+    "appId": "com.tinder.ios-automation",
+    "productName": "iOS Automation Control Center",
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
+    "copyright": "Copyright © 2025 Tinder Team",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "out/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "build/**"
+    ],
+    "mac": {
+      "icon": "build/icon.icns",
+      "category": "public.app-category.developer-tools",
+      "identity": null,
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.plist",
+      "entitlementsInherit": "build/entitlements.plist"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Development"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": null
+  }
+}
