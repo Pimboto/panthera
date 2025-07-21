@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Save, Key, Globe, Smartphone, Package, Shield, Eye, EyeOff, CheckCircle, AlertCircle, Zap } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 
@@ -13,6 +13,98 @@ interface ConfigSettings {
 interface ConfigurationProps {
   toast: ReturnType<typeof useToast>;
 }
+
+// ✅ COMPONENTE EXTRAÍDO - Ya no se re-crea en cada render
+interface ConfigFieldProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  icon: React.ComponentType<{ className?: string }>;
+  type?: string;
+  isSecret?: boolean;
+  secretKey?: 'daisySmsApiKey' | 'activationKey';
+  required?: boolean;
+  validation?: (value: string) => boolean;
+  showKeys?: { [key: string]: boolean };
+  onToggleVisibility?: (field: 'daisySmsApiKey' | 'activationKey') => void;
+}
+
+const ConfigField: React.FC<ConfigFieldProps> = React.memo(({ 
+  label, 
+  value, 
+  onChange, 
+  placeholder, 
+  icon: Icon,
+  type = 'text',
+  isSecret = false,
+  secretKey,
+  required = false,
+  validation,
+  showKeys = {},
+  onToggleVisibility
+}) => {
+  const isValid = validation ? validation(value) : true;
+  const showValue = isSecret && secretKey ? showKeys[secretKey] : true;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="flex items-center text-xs font-medium text-gray-700">
+          <Icon className="w-3 h-3 mr-2 text-gray-500" />
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+        {validation && value && (
+          <div className="flex items-center">
+            {isValid ? (
+              <CheckCircle className="w-3 h-3 text-green-500" />
+            ) : (
+              <AlertCircle className="w-3 h-3 text-red-500" />
+            )}
+          </div>
+        )}
+      </div>
+      <div className="relative">
+        <input
+          type={showValue ? type : 'password'}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`desktop-input w-full px-3 py-2 text-xs rounded-md focus:outline-none focus:ring-1 ${
+            validation && value && !isValid
+              ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+              : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+          }`}
+        />
+        {isSecret && secretKey && onToggleVisibility && (
+          <button
+            type="button"
+            onClick={() => onToggleVisibility(secretKey)}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+          >
+            {showValue ? (
+              <EyeOff className="w-3 h-3" />
+            ) : (
+              <Eye className="w-3 h-3" />
+            )}
+          </button>
+        )}
+      </div>
+      {validation && value && !isValid && (
+        <p className="text-xs text-red-600">
+          {secretKey === 'activationKey' 
+            ? 'Activation key must be at least 16 characters with uppercase letters, numbers, and hyphens only'
+            : 'Invalid format'
+          }
+        </p>
+      )}
+    </div>
+  );
+});
+
+// Agregar displayName para debugging
+ConfigField.displayName = 'ConfigField';
 
 const Configuration: React.FC<ConfigurationProps> = ({ toast }) => {
   const [settings, setSettings] = useState<ConfigSettings>({
@@ -30,21 +122,22 @@ const Configuration: React.FC<ConfigurationProps> = ({ toast }) => {
 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
-  const handleInputChange = (field: keyof ConfigSettings, value: string) => {
+  // ✅ HANDLERS OPTIMIZADOS con useCallback
+  const handleInputChange = useCallback((field: keyof ConfigSettings, value: string) => {
     setSettings(prev => ({
       ...prev,
       [field]: value,
     }));
-  };
+  }, []);
 
-  const toggleKeyVisibility = (field: 'daisySmsApiKey' | 'activationKey') => {
+  const toggleKeyVisibility = useCallback((field: 'daisySmsApiKey' | 'activationKey') => {
     setShowKeys(prev => ({
       ...prev,
       [field]: !prev[field],
     }));
-  };
+  }, []);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setSaveStatus('saving');
     
     toast.showInfo('Saving Configuration', 'Please wait...');
@@ -58,93 +151,11 @@ const Configuration: React.FC<ConfigurationProps> = ({ toast }) => {
       );
       setTimeout(() => setSaveStatus('idle'), 2000);
     }, 1000);
-  };
+  }, [toast]);
 
-  const validateActivationKey = (key: string) => {
+  const validateActivationKey = useCallback((key: string) => {
     return key.length >= 16 && /^[A-Z0-9-]+$/.test(key);
-  };
-
-  const ConfigField = ({ 
-    label, 
-    value, 
-    onChange, 
-    placeholder, 
-    icon: Icon,
-    type = 'text',
-    isSecret = false,
-    secretKey,
-    required = false,
-    validation
-  }: {
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-    placeholder: string;
-    icon: React.ComponentType<{ className?: string }>;
-    type?: string;
-    isSecret?: boolean;
-    secretKey?: 'daisySmsApiKey' | 'activationKey';
-    required?: boolean;
-    validation?: (value: string) => boolean;
-  }) => {
-    const isValid = validation ? validation(value) : true;
-    const showValue = isSecret && secretKey ? showKeys[secretKey] : true;
-
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label className="flex items-center text-xs font-medium text-gray-700">
-            <Icon className="w-3 h-3 mr-2 text-gray-500" />
-            {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
-          </label>
-          {validation && value && (
-            <div className="flex items-center">
-              {isValid ? (
-                <CheckCircle className="w-3 h-3 text-green-500" />
-              ) : (
-                <AlertCircle className="w-3 h-3 text-red-500" />
-              )}
-            </div>
-          )}
-        </div>
-        <div className="relative">
-          <input
-            type={showValue ? type : 'password'}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            className={`desktop-input w-full px-3 py-2 text-xs rounded-md focus:outline-none focus:ring-1 ${
-              validation && value && !isValid
-                ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-            }`}
-          />
-          {isSecret && secretKey && (
-            <button
-              type="button"
-              onClick={() => toggleKeyVisibility(secretKey)}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-            >
-              {showValue ? (
-                <EyeOff className="w-3 h-3" />
-              ) : (
-                <Eye className="w-3 h-3" />
-              )}
-            </button>
-          )}
-        </div>
-        {validation && value && !isValid && (
-          <p className="text-xs text-red-600">
-            {secretKey === 'activationKey' 
-              ? 'Activation key must be at least 16 characters with uppercase letters, numbers, and hyphens only'
-              : 'Invalid format'
-            }
-          </p>
-        )}
-      </div>
-    );
-  };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -201,6 +212,8 @@ const Configuration: React.FC<ConfigurationProps> = ({ toast }) => {
               isSecret={true}
               secretKey="daisySmsApiKey"
               required={true}
+              showKeys={showKeys}
+              onToggleVisibility={toggleKeyVisibility}
             />
           </div>
         </div>
@@ -240,6 +253,8 @@ const Configuration: React.FC<ConfigurationProps> = ({ toast }) => {
               secretKey="activationKey"
               required={true}
               validation={validateActivationKey}
+              showKeys={showKeys}
+              onToggleVisibility={toggleKeyVisibility}
             />
             {settings.activationKey && validateActivationKey(settings.activationKey) && (
               <div className="flex items-center text-xs text-green-600">
