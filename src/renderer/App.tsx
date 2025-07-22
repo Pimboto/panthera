@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { Monitor, Smartphone, FileText, Settings } from "lucide-react";
+import { useState, useEffect } from "react";
+// NUEVO: Importar iconsax-reactjs
+import { Home2, Devices, Setting2, Code } from "iconsax-reactjs";
+// import { Monitor, Smartphone, FileText, Settings } from "lucide-react"; // Ya no se usa
 import { ToastContainer } from "./components/Toast";
 import { useToast } from "./hooks/useToast";
 import Dashboard from "./components/Dashboard";
@@ -55,10 +57,34 @@ function App() {
   }, []);
 
   const navigation = [
-    { id: "dashboard", label: "Dashboard", icon: Monitor },
-    { id: "phones", label: "Devices", icon: Smartphone },
-    { id: "logs", label: "Logs", icon: FileText },
-    { id: "config", label: "Config", icon: Settings },
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: (active: boolean) => (
+        <Home2 size={24} color={active ? "#2563eb" : "#64748b"} variant={active ? "Bulk" : "Outline"} />
+      ),
+    },
+    {
+      id: "phones",
+      label: "Devices",
+      icon: (active: boolean) => (
+        <Devices size={24} color={active ? "#2563eb" : "#64748b"} variant={active ? "Bulk" : "Outline"} />
+      ),
+    },
+    {
+      id: "logs",
+      label: "Logs",
+      icon: (active: boolean) => (
+        <Code size={24} color={active ? "#2563eb" : "#64748b"} variant={active ? "Bulk" : "Outline"} />
+      ),
+    },
+    {
+      id: "config",
+      label: "Config",
+      icon: (active: boolean) => (
+        <Setting2 size={24} color={active ? "#2563eb" : "#64748b"} variant={active ? "Bulk" : "Outline"} />
+      ),
+    },
   ];
 
   const renderPage = () => {
@@ -81,8 +107,7 @@ function App() {
       {/* Title Bar */}
       <div className="title-bar flex items-center justify-between px-6 py-3 h-14">
         <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-3">
-          </div>
+          <div className="flex items-center space-x-3"></div>
         </div>
         <div className="flex items-center space-x-2">
           {isElectron && (
@@ -101,23 +126,20 @@ function App() {
         {/* Sidebar */}
         <div className="w-52 desktop-sidebar p-5">
           <nav className="space-y-1">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setCurrentPage(item.id as Page)}
-                  className={`w-full flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-gray-100 ${
-                    currentPage === item.id
-                      ? "bg-blue-50 text-blue-600 border border-blue-200 desktop-card"
-                      : "text-gray-600 hover:text-gray-800"
-                  }`}
-                >
-                  <Icon className="w-5 h-5 mr-3" />
-                  {item.label}
-                </button>
-              );
-            })}
+            {navigation.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setCurrentPage(item.id as Page)}
+                className={`w-full flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-gray-100 ${
+                  currentPage === item.id
+                    ? "bg-blue-50 text-blue-600 border border-blue-200 desktop-card"
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
+              >
+                {item.icon(currentPage === item.id)}
+                <span className="ml-3">{item.label}</span>
+              </button>
+            ))}
           </nav>
         </div>
 
