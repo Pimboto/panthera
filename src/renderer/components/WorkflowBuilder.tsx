@@ -17,9 +17,10 @@ import ReactFlow, {
   Position,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Code, Play, Export, Add, Trash, Setting4, AddSquare } from 'iconsax-reactjs';
+import { Code, Play, Export, Add, Trash, Setting4, AddSquare, Import, Hierarchy2 } from 'iconsax-reactjs';
 import { useToast } from '../hooks/useToast';
 import NodeConfigModal from './NodeConfigModal';
+import dagre from 'dagre';
 
 interface WorkflowBuilderProps {
   toast: ReturnType<typeof useToast>;
@@ -45,7 +46,12 @@ const actionCategories = {
   conditional: {
     name: 'Conditional',
     color: '#f59e0b',
-    actions: ['ifExists', 'loop'],
+    actions: ['ifExists'],
+  },
+  flow: {
+    name: 'Flow Control',
+    color: '#ec4899',
+    actions: ['loop'],
   },
   data: {
     name: 'Data',
@@ -204,6 +210,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
   const [selectors, setSelectors] = useState<Record<string, string>>({});
   const [newSelectorName, setNewSelectorName] = useState('');
   const [newSelectorValue, setNewSelectorValue] = useState('');
+  const [isFlowValid, setIsFlowValid] = useState(false);
 
   const onConnect = useCallback(
     (params: Connection) =>
@@ -322,6 +329,105 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
     toast.showSuccess('Saved', 'Node configuration saved');
   }, [toast]);
 
+  const importFlow = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e: any) => {
+      const file = e.target.files[0];
+      if (file) {
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+          
+          if (data.flowDefinition) {
+            const flowDef = data.flowDefinition;
+            
+            // Set flow details
+            setFlowName(flowDef.name || 'Imported Flow');
+            setFlowDescription(flowDef.description || '');
+            setSelectors(flowDef.selectors || {});
+            
+            // Convert checkpoints to nodes
+            const newNodes: Node[] = [
+              {
+                id: 'start',
+                type: 'startNode',
+                position: { x: 250, y: 0 },
+                data: { label: 'Start' },
+              },
+            ];
+            
+            flowDef.checkpoints?.forEach((checkpoint: any, index: number) => {
+              const action = checkpoint.actions?.[0];
+              if (action) {
+                newNodes.push({
+                  id: checkpoint.id || `imported_${index}`,
+                  type: 'actionNode',
+                  position: { x: 250, y: 100 + index * 100 },
+                  data: {
+                    label: action.type,
+                    actionType: action.type,
+                    description: action.description || actionDetails[action.type]?.description,
+                    color: Object.values(actionCategories).find((cat) =>
+                      cat.actions.includes(action.type)
+                    )?.color,
+                    config: action,
+                  },
+                });
+              }
+            });
+            
+            newNodes.push({
+              id: 'end',
+              type: 'endNode',
+              position: { x: 250, y: 100 + (flowDef.checkpoints?.length || 0) * 100 },
+              data: { label: 'End' },
+            });
+            
+            setNodes(newNodes);
+            setEdges([]);
+            setIsFlowValid(false);
+            toast.showSuccess('Imported', 'Flow imported successfully');
+          }
+        } catch (error) {
+          toast.showError('Error', 'Invalid flow file');
+        }
+      }
+    };
+    input.click();
+  }, [toast]);
+
+  const autoLayout = useCallback(() => {
+    const dagreGraph = new dagre.graphlib.Graph();
+    dagreGraph.setDefaultEdgeLabel(() => ({}));
+    dagreGraph.setGraph({ rankdir: 'TB', nodesep: 50, ranksep: 100 });
+
+    nodes.forEach((node) => {
+      dagreGraph.setNode(node.id, { width: 180, height: 50 });
+    });
+
+    edges.forEach((edge) => {
+      dagreGraph.setEdge(edge.source, edge.target);
+    });
+
+    dagre.layout(dagreGraph);
+
+    const layoutedNodes = nodes.map((node) => {
+      const nodeWithPosition = dagreGraph.node(node.id);
+      return {
+        ...node,
+        position: {
+          x: nodeWithPosition.x - 90,
+          y: nodeWithPosition.y - 25,
+        },
+      };
+    });
+
+    setNodes(layoutedNodes);
+    toast.showSuccess('Organized', 'Workflow layout organized');
+  }, [nodes, edges, toast, setNodes]);
+
   const addSelector = useCallback(() => {
     if (newSelectorName && newSelectorValue) {
       setSelectors((prev) => ({
@@ -422,6 +528,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
     }
 
     toast.showSuccess('Valid', 'Flow is valid and ready to export');
+    setIsFlowValid(true);
     return true;
   }, [nodes, edges, toast]);
 
@@ -548,6 +655,20 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
           <MiniMap />
           <Panel position="top-right" className="flex gap-2">
             <button
+              onClick={importFlow}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors"
+            >
+              <Import size={16} />
+              Import
+            </button>
+            <button
+              onClick={autoLayout}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors"
+            >
+              <Hierarchy2 size={16} />
+              Organize
+            </button>
+            <button
               onClick={validateFlow}
               className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
@@ -556,7 +677,12 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
             </button>
             <button
               onClick={exportFlow}
-              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+              disabled={!isFlowValid}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                isFlowValid
+                  ? 'bg-green-500 text-white hover:bg-green-600'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
             >
               <Export size={16} />
               Export

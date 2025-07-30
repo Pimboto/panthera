@@ -14,6 +14,10 @@ app.commandLine.appendSwitch('disable-features', 'VizDisplayCompositor')
 app.commandLine.appendSwitch('enable-accelerated-2d-canvas')
 app.commandLine.appendSwitch('enable-gpu-rasterization')
 app.commandLine.appendSwitch('enable-zero-copy')
+// Silenciar algunos errores de Chromium
+app.commandLine.appendSwitch('disable-dev-shm-usage')
+app.commandLine.appendSwitch('disable-extensions')
+app.commandLine.appendSwitch('no-sandbox')
 
 // Usar el icono apropiado para cada plataforma
 const getAppIcon = () => {
@@ -31,7 +35,7 @@ const getAppIcon = () => {
 }
 
 // Configuración de seguridad CSP para producción
-const CSP_POLICY = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;"
+const CSP_POLICY = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*;"
 
 function createWindow(): void {
   // Crear splash screen primero para perceived performance
@@ -54,7 +58,7 @@ function createWindow(): void {
       contextIsolation: true,
       enableRemoteModule: false,
       nodeIntegration: false,
-      webSecurity: true,
+      webSecurity: !is.dev, // Relajar seguridad solo en desarrollo
       allowRunningInsecureContent: false,
       experimentalFeatures: false,
       // Optimizaciones de rendimiento
