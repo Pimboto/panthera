@@ -198,7 +198,7 @@ const nodeTypes = {
     
     return (
       <div 
-        className={`relative border-2 border-dashed rounded-lg p-4 ${
+        className={`checkpoint-area-node relative border-2 border-dashed rounded-lg p-4 ${
           data.isDropTarget 
             ? 'border-green-400 bg-green-50' 
             : 'border-purple-400 bg-purple-50'
@@ -206,7 +206,8 @@ const nodeTypes = {
         style={{
           width: `${width}px`,
           height: `${height}px`,
-          zIndex: -1, // Ensure area is behind actions
+          zIndex: 0, // Normal z-index
+          position: 'relative',
         }}
       >
         {/* Connection Handles */}
@@ -1674,6 +1675,28 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
 
       {/* Flow Editor */}
       <div className="flex-1 relative" ref={reactFlowWrapper}>
+        <style>{`
+          /* Ensure edges (connections) are always above checkpoint areas */
+          .react-flow__edges {
+            z-index: 100 !important;
+          }
+          .react-flow__edge {
+            z-index: 100 !important;
+          }
+          /* Action nodes above checkpoint areas */
+          .react-flow__node-actionNode {
+            z-index: 50 !important;
+          }
+          /* Checkpoint areas at the bottom */
+          .react-flow__node-checkpointArea {
+            z-index: 1 !important;
+          }
+          /* Start/End nodes */
+          .react-flow__node-startNode,
+          .react-flow__node-endNode {
+            z-index: 50 !important;
+          }
+        `}</style>
         <ReactFlow
           nodes={nodes}
           edges={edges}
