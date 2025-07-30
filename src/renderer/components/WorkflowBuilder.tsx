@@ -311,7 +311,9 @@ const generateCheckpoints = (nodes: Node[], edges: Edge[], checkpointGroups: Rec
   const actionNodes = nodes.filter((node) => node.type === 'actionNode');
   const checkpointAreaNodes = nodes.filter((node) => node.type === 'checkpointArea');
   
-  if (actionNodes.length === 0) return [];
+  if (checkpointAreaNodes.length === 0 && actionNodes.length === 0) return [];
+
+  console.log('Generating checkpoints...', { actionNodes: actionNodes.length, areas: checkpointAreaNodes.length });
 
   // Helper function to check if a node is inside an area
   const checkIfNodeInAreaExport = (nodePosition: {x: number, y: number}, areaNode: Node) => {
@@ -319,12 +321,16 @@ const generateCheckpoints = (nodes: Node[], edges: Edge[], checkpointGroups: Rec
     const areaWidth = areaNode.data.contentWidth || 300;
     const areaHeight = areaNode.data.contentHeight || 200;
     
-    return (
-      nodePosition.x > areaPos.x &&
-      nodePosition.x < areaPos.x + areaWidth &&
-      nodePosition.y > areaPos.y + 60 && // Account for header
-      nodePosition.y < areaPos.y + areaHeight
+    const isInside = (
+      nodePosition.x >= areaPos.x &&
+      nodePosition.x <= areaPos.x + areaWidth &&
+      nodePosition.y >= areaPos.y + 60 && // Account for header
+      nodePosition.y <= areaPos.y + areaHeight
     );
+    
+    console.log(`Checking if action at (${nodePosition.x}, ${nodePosition.y}) is inside area "${areaNode.data.label}" at (${areaPos.x}, ${areaPos.y}) with size ${areaWidth}x${areaHeight}: ${isInside}`);
+    
+    return isInside;
   };
 
   // Group actions by checkpoint areas
@@ -335,6 +341,8 @@ const generateCheckpoints = (nodes: Node[], edges: Edge[], checkpointGroups: Rec
     const actionsInArea = actionNodes.filter(actionNode => 
       checkIfNodeInAreaExport(actionNode.position, areaNode)
     );
+    
+    console.log(`Area "${areaNode.data.label}" contains ${actionsInArea.length} actions:`, actionsInArea.map(a => a.data.label));
     
     if (actionsInArea.length > 0) {
       groupedNodes.set(areaNode.data.label, actionsInArea);
@@ -349,8 +357,11 @@ const generateCheckpoints = (nodes: Node[], edges: Edge[], checkpointGroups: Rec
 
   const unassignedActions = actionNodes.filter(node => !assignedActionIds.has(node.id));
   if (unassignedActions.length > 0) {
+    console.log(`Found ${unassignedActions.length} unassigned actions, adding to default checkpoint`);
     groupedNodes.set('default', unassignedActions);
   }
+
+  console.log('Final grouped nodes:', Object.fromEntries(groupedNodes));
 
   // Convert groups to checkpoints
   const checkpoints: any[] = [];
@@ -362,18 +373,26 @@ const generateCheckpoints = (nodes: Node[], edges: Edge[], checkpointGroups: Rec
   });
   
   sortedGroups.forEach(([checkpointName, groupNodes], index) => {
-    // Create actions from nodes in this group
-    const actions = groupNodes
-      .filter(node => node.data.config && Object.keys(node.data.config).length > 0)
-      .map(node => ({
+    // Create actions from nodes in this group - include ALL actions, not just configured ones
+    const actions = groupNodes.map(node => {
+      const baseAction = {
         type: node.data.actionType,
-        description: node.data.description,
-        ...node.data.config,
-      }));
+        description: node.data.description || `${node.data.actionType} action`,
+      };
+      
+      // Add configuration if it exists and is not empty
+      if (node.data.config && Object.keys(node.data.config).length > 0) {
+        return { ...baseAction, ...node.data.config };
+      }
+      
+      return baseAction;
+    });
+
+    console.log(`Creating checkpoint "${checkpointName}" with ${actions.length} actions:`, actions);
 
     if (actions.length > 0) {
       const checkpoint = {
-        id: groupNodes[0].id,
+        id: `checkpoint-${checkpointName.toLowerCase().replace(/\s+/g, '-')}`,
         name: checkpointName,
         type: 'interactive' as const,
         timeout: 30000,
@@ -381,7 +400,7 @@ const generateCheckpoints = (nodes: Node[], edges: Edge[], checkpointGroups: Rec
         description: actions.length === 1 
           ? actions[0].description 
           : `${checkpointName}: ${actions.map(a => a.type).join(', ')}`,
-        dependencies: index > 0 ? [sortedGroups[index - 1][0]] : [],
+        dependencies: index > 0 ? [`checkpoint-${sortedGroups[index - 1][0].toLowerCase().replace(/\s+/g, '-')}`] : [],
         actions,
       };
       
@@ -389,6 +408,7 @@ const generateCheckpoints = (nodes: Node[], edges: Edge[], checkpointGroups: Rec
     }
   });
 
+  console.log('Generated checkpoints:', checkpoints);
   return checkpoints;
 };
 
@@ -444,9 +464,9 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
       // Use basic overlap check first
       return (
         nodePos.x > areaPos.x - 100 && // Give some tolerance
-        nodePos.x < areaPos.x + 400 &&
+        nodePos.x < areaPos.x + 800 &&  // INCREASED TOLERANCE
         nodePos.y > areaPos.y - 50 &&
-        nodePos.y < areaPos.y + 300
+        nodePos.y < areaPos.y + 600      // INCREASED TOLERANCE
       );
     });
 
@@ -454,10 +474,10 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
       return { width: 300, height: 200 };
     }
 
-    // Calculate bounding box of all actions
-    const padding = 40;
-    const nodeWidth = 180; // Approximate action node width
-    const nodeHeight = 60; // Approximate action node height
+    // Calculate bounding box of all actions with GENEROUS space
+    const padding = 60; // INCREASED padding
+    const nodeWidth = 180;
+    const nodeHeight = 70;
 
     let minX = Infinity, maxX = -Infinity;
     let minY = Infinity, maxY = -Infinity;
@@ -472,8 +492,11 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
       maxY = Math.max(maxY, relativeY + nodeHeight);
     });
 
-    const contentWidth = Math.max(300, maxX - Math.min(minX, 0) + padding * 2);
-    const contentHeight = Math.max(200, maxY - Math.min(minY, 60) + padding * 2); // 60px for header
+    // REMOVE LIMITS - let area grow as much as needed
+    const contentWidth = Math.max(400, maxX - Math.min(minX, 0) + padding * 2); // MIN 400px
+    const contentHeight = Math.max(300, maxY - Math.min(minY, 80) + padding * 2); // MIN 300px, 80px for header
+
+    console.log(`Area "${areaNode.data.label}" calculated size: ${contentWidth}x${contentHeight} for ${actionsInArea.length} actions`);
 
     return { width: contentWidth, height: contentHeight };
   }, []);
@@ -483,11 +506,15 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
     const areaWidth = areaNode.data.contentWidth || 300;
     const areaHeight = areaNode.data.contentHeight || 200;
     
+    // Add some tolerance to the boundaries for better detection
+    const tolerance = 10;
+    const headerHeight = 80;
+    
     return (
-      nodePosition.x > areaPos.x &&
-      nodePosition.x < areaPos.x + areaWidth &&
-      nodePosition.y > areaPos.y + 60 && // Account for header
-      nodePosition.y < areaPos.y + areaHeight
+      nodePosition.x >= areaPos.x - tolerance &&
+      nodePosition.x <= areaPos.x + areaWidth + tolerance &&
+      nodePosition.y >= areaPos.y + headerHeight - tolerance &&
+      nodePosition.y <= areaPos.y + areaHeight + tolerance
     );
   }, []);
 
@@ -621,13 +648,19 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
           const actionNodes = nds.filter(n => n.type === 'actionNode');
           const bounds = calculateAreaBounds(node, actionNodes);
           
-          // Update the node with new bounds first, preserving all handlers
-          const updatedNode = {
+          // Count actions within current bounds (WITHOUT changing node positions)
+          const actionsInArea = actionNodes.filter(actionNode => 
+            checkIfNodeInArea(actionNode.position, node)
+          ).length;
+          
+          // Update ONLY the area node, preserving all handlers
+          return {
             ...node,
             data: {
               ...node.data,
               contentWidth: bounds.width,
               contentHeight: bounds.height,
+              actionCount: actionsInArea,
               onEdit: () => startInlineEdit(node.id, node.data.label),
               onNameChange: (newName: string) => handleInlineNameChange(node.id, newName),
               onNameSave: () => saveInlineEdit(node.id),
@@ -635,21 +668,8 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
               onDelete: () => deleteCheckpointArea(node.id),
             },
           };
-          
-          // Then count actions within the updated bounds
-          const actionsInArea = actionNodes.filter(actionNode => 
-            checkIfNodeInArea(actionNode.position, updatedNode)
-          ).length;
-          
-          return {
-            ...updatedNode,
-            data: {
-              ...updatedNode.data,
-              actionCount: actionsInArea,
-            },
-          };
         }
-        return node;
+        return node; // Return action nodes UNCHANGED
       })
     );
   }, [calculateAreaBounds, checkIfNodeInArea, startInlineEdit, handleInlineNameChange, saveInlineEdit, cancelInlineEdit, deleteCheckpointArea]);
@@ -799,6 +819,11 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
             data: {
               ...node.data,
               config,
+              // Preserve all handlers and properties to prevent node updates
+              onSettings: () => {
+                setConfigNode(node);
+                setIsConfigModalOpen(true);
+              },
             },
           };
         }
@@ -806,6 +831,8 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
       })
     );
     toast.showSuccess('Saved', 'Node configuration saved');
+    
+    // DO NOT call updateActionCountInAreas here - it moves nodes!
   }, [toast]);
 
   const importFlow = useCallback(() => {
@@ -837,15 +864,29 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
             // Check if we have visual layout (new format)
             if (flowDef.visualLayout) {
               // Import with full visual layout and connections
-              const importedNodes = flowDef.visualLayout.nodes.map((node: any) => ({
-                ...node,
-                data: {
-                  ...node.data,
-                  onSettings: node.type === 'actionNode' ? () => {
-                    // This will be set up after import
-                  } : undefined,
+              const importedNodes = flowDef.visualLayout.nodes.map((node: any) => {
+                let nodeData = { ...node.data };
+                
+                // Set up handlers for different node types
+                if (node.type === 'actionNode') {
+                  nodeData.onSettings = () => {
+                    setConfigNode(node);
+                    setIsConfigModalOpen(true);
+                  };
+                } else if (node.type === 'checkpointArea') {
+                  const areaId = node.id;
+                  nodeData.onEdit = () => startInlineEdit(areaId, nodeData.label);
+                  nodeData.onNameChange = (newName: string) => handleInlineNameChange(areaId, newName);
+                  nodeData.onNameSave = () => saveInlineEdit(areaId);
+                  nodeData.onNameCancel = () => cancelInlineEdit(areaId);
+                  nodeData.onDelete = () => deleteCheckpointArea(areaId);
                 }
-              }));
+                
+                return {
+                  ...node,
+                  data: nodeData,
+                };
+              });
               
               const importedEdges = flowDef.visualLayout.edges.map((edge: any) => ({
                 ...edge,
@@ -855,6 +896,17 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
               
               setNodes(importedNodes);
               setEdges(importedEdges);
+              
+              // Update checkpoint areas map
+              const checkpointAreaNodes = importedNodes.filter(n => n.type === 'checkpointArea');
+              const newCheckpointAreas = new Map();
+              checkpointAreaNodes.forEach(node => {
+                newCheckpointAreas.set(node.id, { 
+                  name: node.data.label, 
+                  position: node.position 
+                });
+              });
+              setCheckpointAreas(newCheckpointAreas);
             } else {
               // Fallback to old format - convert checkpoints to nodes
               const newNodes: Node[] = [
@@ -909,29 +961,39 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
   }, [toast]);
 
   const autoLayout = useCallback(() => {
-    // Separate nodes by type
+    console.log('=== STARTING AUTO-LAYOUT ===');
+    
+    // Get current state
     const checkpointAreas = nodes.filter(n => n.type === 'checkpointArea');
     const actionNodes = nodes.filter(n => n.type === 'actionNode');
     const startEndNodes = nodes.filter(n => n.type === 'startNode' || n.type === 'endNode');
     
-    // First, organize checkpoint areas and start/end nodes using dagre
+    console.log('Current nodes:', {
+      areas: checkpointAreas.length,
+      actions: actionNodes.length,
+      startEnd: startEndNodes.length
+    });
+    
+    // Create result array starting with existing nodes
+    const layoutedNodes: Node[] = [];
+
+    // 1. FIRST: Layout checkpoint areas and start/end nodes vertically
     const mainGraph = new dagre.graphlib.Graph();
     mainGraph.setDefaultEdgeLabel(() => ({}));
     mainGraph.setGraph({ rankdir: 'TB', nodesep: 100, ranksep: 150 });
 
-    // Add checkpoint areas and start/end nodes to main graph
+    // Add main nodes to graph
     [...checkpointAreas, ...startEndNodes].forEach((node) => {
-      const width = node.type === 'checkpointArea' ? 350 : 180;
-      const height = node.type === 'checkpointArea' ? 250 : 50;
+      const width = node.type === 'checkpointArea' ? (node.data.contentWidth || 350) : 180;
+      const height = node.type === 'checkpointArea' ? (node.data.contentHeight || 250) : 50;
       mainGraph.setNode(node.id, { width, height });
     });
 
-    // Add edges between checkpoint areas and main nodes
+    // Add main edges (between areas and start/end)
     edges.forEach((edge) => {
       const sourceNode = nodes.find(n => n.id === edge.source);
       const targetNode = nodes.find(n => n.id === edge.target);
       
-      // Only add edge if both nodes are checkpoint areas or start/end nodes
       if (sourceNode && targetNode && 
           (sourceNode.type === 'checkpointArea' || sourceNode.type === 'startNode' || sourceNode.type === 'endNode') &&
           (targetNode.type === 'checkpointArea' || targetNode.type === 'startNode' || targetNode.type === 'endNode')) {
@@ -941,15 +1003,12 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
 
     dagre.layout(mainGraph);
 
-    // Create new positioned nodes array
-    const layoutedNodes: Node[] = [];
-
-    // Position checkpoint areas and start/end nodes based on dagre layout
+    // Position main nodes
     [...checkpointAreas, ...startEndNodes].forEach((node) => {
       const nodeWithPosition = mainGraph.node(node.id);
       const newPosition = {
-        x: nodeWithPosition.x - (node.type === 'checkpointArea' ? 175 : 90),
-        y: nodeWithPosition.y - (node.type === 'checkpointArea' ? 125 : 25),
+        x: nodeWithPosition.x - (node.type === 'checkpointArea' ? (node.data.contentWidth || 350) / 2 : 90),
+        y: nodeWithPosition.y - (node.type === 'checkpointArea' ? (node.data.contentHeight || 250) / 2 : 25),
       };
       
       layoutedNodes.push({
@@ -958,82 +1017,98 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
       });
     });
 
-    // Now organize actions within each checkpoint area
-    checkpointAreas.forEach((areaNode) => {
-      const layoutedArea = layoutedNodes.find(n => n.id === areaNode.id);
+    // 2. SECOND: For each area, organize its actions INSIDE
+    checkpointAreas.forEach((originalArea) => {
+      const layoutedArea = layoutedNodes.find(n => n.id === originalArea.id);
       if (!layoutedArea) return;
 
-      // Find actions that belong to this area
-      const actionsInArea = actionNodes.filter(actionNode => 
-        checkIfNodeInAreaLayout(actionNode.position, areaNode)
+      // Find actions currently in this area
+      const actionsInThisArea = actionNodes.filter(actionNode => 
+        checkIfNodeInArea(actionNode.position, originalArea)
       );
 
-      if (actionsInArea.length === 0) return;
+      console.log(`Area "${originalArea.data.label}" has ${actionsInThisArea.length} actions:`, 
+        actionsInThisArea.map(a => a.data.label));
 
-      // Create a small dagre graph for actions within this area
-      const areaGraph = new dagre.graphlib.Graph();
-      areaGraph.setDefaultEdgeLabel(() => ({}));
-      areaGraph.setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 60 });
+      if (actionsInThisArea.length === 0) return;
 
-      // Add actions to area graph
-      actionsInArea.forEach((actionNode) => {
-        areaGraph.setNode(actionNode.id, { width: 180, height: 60 });
-      });
+      // Grid layout with UNLIMITED SPACE - area will expand to fit all actions
+      const areaPos = layoutedArea.position;
+      const padding = 40;
+      const headerHeight = 90;
+      const actionWidth = 180;
+      const actionHeight = 80;
+      const spacingX = 30; // Horizontal spacing between actions
+      const spacingY = 30; // Vertical spacing between actions
 
-      // Add edges between actions in this area
-      edges.forEach((edge) => {
-        const sourceInArea = actionsInArea.find(n => n.id === edge.source);
-        const targetInArea = actionsInArea.find(n => n.id === edge.target);
-        if (sourceInArea && targetInArea) {
-          areaGraph.setEdge(edge.source, edge.target);
-        }
-      });
+      // Calculate optimal grid: prefer 2-3 actions per row
+      const maxActionsPerRow = Math.min(3, actionsInThisArea.length);
+      const actionsPerRow = actionsInThisArea.length === 1 ? 1 : 
+                           actionsInThisArea.length === 2 ? 2 : 
+                           Math.min(maxActionsPerRow, Math.ceil(Math.sqrt(actionsInThisArea.length)));
 
-      dagre.layout(areaGraph);
+      console.log(`Organizing ${actionsInThisArea.length} actions in ${actionsPerRow} columns`);
 
-      // Position actions relative to their area
-      const areaPosition = layoutedArea.position;
-      const padding = 20;
-      const headerHeight = 80; // Space for area header
+      actionsInThisArea.forEach((actionNode, index) => {
+        const row = Math.floor(index / actionsPerRow);
+        const col = index % actionsPerRow;
 
-      actionsInArea.forEach((actionNode) => {
-        const nodeWithPosition = areaGraph.node(actionNode.id);
+        const x = areaPos.x + padding + (col * (actionWidth + spacingX));
+        const y = areaPos.y + headerHeight + padding + (row * (actionHeight + spacingY));
+
         layoutedNodes.push({
           ...actionNode,
-          position: {
-            x: areaPosition.x + padding + nodeWithPosition.x - 90,
-            y: areaPosition.y + headerHeight + nodeWithPosition.y - 30,
-          },
+          position: { x, y },
         });
+
+        console.log(`Action "${actionNode.data.label}" positioned at (${x}, ${y}) - row ${row}, col ${col}`);
       });
+
+      // Calculate the new area size needed
+      const rows = Math.ceil(actionsInThisArea.length / actionsPerRow);
+      const neededWidth = padding * 2 + (actionsPerRow * actionWidth) + ((actionsPerRow - 1) * spacingX);
+      const neededHeight = headerHeight + padding * 2 + (rows * actionHeight) + ((rows - 1) * spacingY);
+
+      // Update the layouted area size
+      const areaIndex = layoutedNodes.findIndex(n => n.id === layoutedArea.id);
+      if (areaIndex !== -1) {
+        layoutedNodes[areaIndex] = {
+          ...layoutedNodes[areaIndex],
+          data: {
+            ...layoutedNodes[areaIndex].data,
+            contentWidth: Math.max(400, neededWidth),
+            contentHeight: Math.max(250, neededHeight),
+          },
+        };
+        console.log(`Updated area "${originalArea.data.label}" size to ${neededWidth}x${neededHeight}`);
+      }
     });
 
-    // Add any remaining actions that are not in areas
-    const actionsNotInAnyArea = actionNodes.filter(actionNode => {
-      return !checkpointAreas.some(areaNode => 
-        checkIfNodeInAreaLayout(actionNode.position, areaNode)
-      );
+    // 3. THIRD: Add actions not in any area
+    const assignedActionIds = new Set();
+    checkpointAreas.forEach(area => {
+      const actionsInArea = actionNodes.filter(action => checkIfNodeInArea(action.position, area));
+      actionsInArea.forEach(action => assignedActionIds.add(action.id));
     });
 
-    // Position remaining actions using simple vertical layout
-    let yOffset = 300;
-    actionsNotInAnyArea.forEach((actionNode, index) => {
+    const unassignedActions = actionNodes.filter(node => !assignedActionIds.has(node.id));
+    unassignedActions.forEach((actionNode, index) => {
       layoutedNodes.push({
         ...actionNode,
         position: {
-          x: 500 + (index % 3) * 200, // 3 columns
-          y: yOffset + Math.floor(index / 3) * 100,
+          x: 600 + (index % 2) * 220,
+          y: 200 + Math.floor(index / 2) * 100,
         },
       });
     });
 
+    console.log('Final layouted nodes:', layoutedNodes.length);
+    
+    // Apply the layout
     setNodes(layoutedNodes);
     
-    // Update area sizes after layout
-    setTimeout(updateActionCountInAreas, 100);
-    
-    toast.showSuccess('Organized', 'Workflow layout organized while preserving checkpoint areas');
-  }, [nodes, edges, toast, setNodes, checkIfNodeInAreaLayout, updateActionCountInAreas]);
+    toast.showSuccess('Organized', 'Actions organized within their checkpoint areas');
+  }, [nodes, edges, toast, setNodes, checkIfNodeInArea]);
 
   const addSelector = useCallback(() => {
     if (newSelectorName && newSelectorValue) {
