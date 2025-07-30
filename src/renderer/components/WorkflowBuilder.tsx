@@ -17,7 +17,7 @@ import ReactFlow, {
   Position,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Code, Play, Export, Add, Trash, Setting4, AddSquare, Import, Hierarchy2 } from 'iconsax-reactjs';
+import { Code, Play, Export, Add, Trash, Setting4, AddSquare, Import, Hierarchy2, Edit, CloseSquare } from 'iconsax-reactjs';
 import { useToast } from '../hooks/useToast';
 import NodeConfigModal from './NodeConfigModal';
 import dagre from 'dagre';
@@ -211,6 +211,9 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
   const [newSelectorName, setNewSelectorName] = useState('');
   const [newSelectorValue, setNewSelectorValue] = useState('');
   const [isFlowValid, setIsFlowValid] = useState(false);
+  const [editingSelector, setEditingSelector] = useState<string | null>(null);
+  const [editSelectorName, setEditSelectorName] = useState('');
+  const [editSelectorValue, setEditSelectorValue] = useState('');
 
   const onConnect = useCallback(
     (params: Connection) =>
@@ -348,47 +351,71 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
             setFlowDescription(flowDef.description || '');
             setSelectors(flowDef.selectors || {});
             
-            // Convert checkpoints to nodes
-            const newNodes: Node[] = [
-              {
-                id: 'start',
-                type: 'startNode',
-                position: { x: 250, y: 0 },
-                data: { label: 'Start' },
-              },
-            ];
+            // Check if we have visual layout (new format)
+            if (flowDef.visualLayout) {
+              // Import with full visual layout and connections
+              const importedNodes = flowDef.visualLayout.nodes.map((node: any) => ({
+                ...node,
+                data: {
+                  ...node.data,
+                  onSettings: node.type === 'actionNode' ? () => {
+                    // This will be set up after import
+                  } : undefined,
+                }
+              }));
+              
+              const importedEdges = flowDef.visualLayout.edges.map((edge: any) => ({
+                ...edge,
+                type: 'smoothstep',
+                markerEnd: { type: MarkerType.ArrowClosed },
+              }));
+              
+              setNodes(importedNodes);
+              setEdges(importedEdges);
+            } else {
+              // Fallback to old format - convert checkpoints to nodes
+              const newNodes: Node[] = [
+                {
+                  id: 'start',
+                  type: 'startNode',
+                  position: { x: 250, y: 0 },
+                  data: { label: 'Start' },
+                },
+              ];
+              
+              flowDef.checkpoints?.forEach((checkpoint: any, index: number) => {
+                const action = checkpoint.actions?.[0];
+                if (action) {
+                  newNodes.push({
+                    id: checkpoint.id || `imported_${index}`,
+                    type: 'actionNode',
+                    position: { x: 250, y: 100 + index * 100 },
+                    data: {
+                      label: action.type,
+                      actionType: action.type,
+                      description: action.description || actionDetails[action.type]?.description,
+                      color: Object.values(actionCategories).find((cat) =>
+                        cat.actions.includes(action.type)
+                      )?.color,
+                      config: action,
+                    },
+                  });
+                }
+              });
+              
+              newNodes.push({
+                id: 'end',
+                type: 'endNode',
+                position: { x: 250, y: 100 + (flowDef.checkpoints?.length || 0) * 100 },
+                data: { label: 'End' },
+              });
+              
+              setNodes(newNodes);
+              setEdges([]);
+            }
             
-            flowDef.checkpoints?.forEach((checkpoint: any, index: number) => {
-              const action = checkpoint.actions?.[0];
-              if (action) {
-                newNodes.push({
-                  id: checkpoint.id || `imported_${index}`,
-                  type: 'actionNode',
-                  position: { x: 250, y: 100 + index * 100 },
-                  data: {
-                    label: action.type,
-                    actionType: action.type,
-                    description: action.description || actionDetails[action.type]?.description,
-                    color: Object.values(actionCategories).find((cat) =>
-                      cat.actions.includes(action.type)
-                    )?.color,
-                    config: action,
-                  },
-                });
-              }
-            });
-            
-            newNodes.push({
-              id: 'end',
-              type: 'endNode',
-              position: { x: 250, y: 100 + (flowDef.checkpoints?.length || 0) * 100 },
-              data: { label: 'End' },
-            });
-            
-            setNodes(newNodes);
-            setEdges([]);
             setIsFlowValid(false);
-            toast.showSuccess('Imported', 'Flow imported successfully');
+            toast.showSuccess('Imported', 'Flow imported successfully with connections');
           }
         } catch (error) {
           toast.showError('Error', 'Invalid flow file');
@@ -442,6 +469,41 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
     }
   }, [newSelectorName, newSelectorValue, toast]);
 
+  const startEditingSelector = useCallback((name: string) => {
+    setEditingSelector(name);
+    setEditSelectorName(name);
+    setEditSelectorValue(selectors[name]);
+  }, [selectors]);
+
+  const saveEditingSelector = useCallback(() => {
+    if (editSelectorName && editSelectorValue && editingSelector) {
+      const newSelectors = { ...selectors };
+      // Delete old key if name changed
+      if (editSelectorName !== editingSelector) {
+        delete newSelectors[editingSelector];
+      }
+      newSelectors[editSelectorName] = editSelectorValue;
+      setSelectors(newSelectors);
+      setEditingSelector(null);
+      setEditSelectorName('');
+      setEditSelectorValue('');
+      toast.showSuccess('Updated', 'Selector updated successfully');
+    }
+  }, [editingSelector, editSelectorName, editSelectorValue, selectors, toast]);
+
+  const cancelEditingSelector = useCallback(() => {
+    setEditingSelector(null);
+    setEditSelectorName('');
+    setEditSelectorValue('');
+  }, []);
+
+  const deleteSelector = useCallback((name: string) => {
+    const newSelectors = { ...selectors };
+    delete newSelectors[name];
+    setSelectors(newSelectors);
+    toast.showSuccess('Deleted', 'Selector deleted successfully');
+  }, [selectors, toast]);
+
   const exportFlow = useCallback(() => {
     // Generate the flow JSON based on the guide structure
     const flowDefinition = {
@@ -454,6 +516,22 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
         author: 'workflow-builder',
         tags: ['visual-builder'],
         selectors: selectors,
+        // Include visual layout information for import
+        visualLayout: {
+          nodes: nodes.map(node => ({
+            id: node.id,
+            type: node.type,
+            position: node.position,
+            data: node.data
+          })),
+          edges: edges.map(edge => ({
+            id: edge.id,
+            source: edge.source,
+            target: edge.target,
+            sourceHandle: edge.sourceHandle,
+            targetHandle: edge.targetHandle
+          }))
+        },
         checkpoints: nodes
           .filter((node) => node.type === 'actionNode')
           .map((node, index) => ({
@@ -590,9 +668,64 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
           {Object.entries(selectors).length > 0 && (
             <div className="mt-2 space-y-1">
               {Object.entries(selectors).map(([name, value]) => (
-                <div key={name} className="text-xs bg-gray-50 p-2 rounded">
-                  <div className="font-medium">${name}</div>
-                  <div className="text-gray-500 truncate">{value}</div>
+                <div key={name}>
+                  {editingSelector === name ? (
+                    <div className="bg-blue-50 p-2 rounded border border-blue-200 space-y-2">
+                      <input
+                        type="text"
+                        value={editSelectorName}
+                        onChange={(e) => setEditSelectorName(e.target.value)}
+                        className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="Selector name"
+                      />
+                      <input
+                        type="text"
+                        value={editSelectorValue}
+                        onChange={(e) => setEditSelectorValue(e.target.value)}
+                        className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="XPath selector"
+                      />
+                      <div className="flex gap-1">
+                        <button
+                          onClick={saveEditingSelector}
+                          className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+                        >
+                          <Setting4 size={12} />
+                          Save
+                        </button>
+                        <button
+                          onClick={cancelEditingSelector}
+                          className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
+                        >
+                          <CloseSquare size={12} />
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 p-2 rounded group hover:bg-gray-100">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-xs">${name}</div>
+                          <div className="text-gray-500 text-xs truncate">{value}</div>
+                        </div>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => startEditingSelector(name)}
+                            className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-100 rounded"
+                          >
+                            <Edit size={12} />
+                          </button>
+                          <button
+                            onClick={() => deleteSelector(name)}
+                            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded"
+                          >
+                            <Trash size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
