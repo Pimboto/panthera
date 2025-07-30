@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 // NUEVO: Importar iconsax-reactjs
-import { Home2, Devices, Setting2, Code } from "iconsax-reactjs";
+import { Home2, Devices, Setting2, Code, Hierarchy3 } from "iconsax-reactjs";
 // import { Monitor, Smartphone, FileText, Settings } from "lucide-react"; // Ya no se usa
 import { ToastContainer } from "./components/Toast";
 import { useToast } from "./hooks/useToast";
@@ -8,8 +8,9 @@ import Dashboard from "./components/Dashboard";
 import PhoneSelector from "./components/PhoneSelector";
 import LogsViewer from "./components/LogsViewer";
 import Configuration from "./components/Configuration";
+import WorkflowBuilder from "./components/WorkflowBuilder";
 
-type Page = "dashboard" | "phones" | "logs" | "config";
+type Page = "dashboard" | "phones" | "logs" | "config" | "workflows";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>("dashboard");
@@ -72,6 +73,13 @@ function App() {
       ),
     },
     {
+      id: "workflows",
+      label: "Workflows",
+      icon: (active: boolean) => (
+        <Hierarchy3 size={24} color={active ? "#2563eb" : "#64748b"} variant={active ? "Bulk" : "Outline"} />
+      ),
+    },
+    {
       id: "logs",
       label: "Logs",
       icon: (active: boolean) => (
@@ -93,6 +101,8 @@ function App() {
         return <Dashboard toast={toast} />;
       case "phones":
         return <PhoneSelector toast={toast} />;
+      case "workflows":
+        return <WorkflowBuilder toast={toast} />;
       case "logs":
         return <LogsViewer toast={toast} />;
       case "config":

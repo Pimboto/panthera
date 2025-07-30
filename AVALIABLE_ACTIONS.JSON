@@ -1,0 +1,376 @@
+{
+  "success": true,
+  "data": {
+    "actions": [
+      {
+        "type": "click",
+        "description": "Click at specific coordinates",
+        "requiredParams": [
+          "coordinates"
+        ],
+        "optionalParams": [
+          "waitAfter"
+        ],
+        "example": {
+          "type": "click",
+          "coordinates": {
+            "x": 100,
+            "y": 200
+          }
+        }
+      },
+      {
+        "type": "findAndClick",
+        "description": "Find element by selector and click it",
+        "requiredParams": [
+          "selector"
+        ],
+        "optionalParams": [
+          "timeout",
+          "waitAfter"
+        ],
+        "example": {
+          "type": "findAndClick",
+          "selector": "$loginButton"
+        }
+      },
+      {
+        "type": "type",
+        "description": "Type text in element or active field",
+        "requiredParams": [
+          "text"
+        ],
+        "optionalParams": [
+          "selector",
+          "clearFirst",
+          "timeout"
+        ],
+        "example": {
+          "type": "type",
+          "selector": "$emailInput",
+          "text": "user@example.com"
+        }
+      },
+      {
+        "type": "wait",
+        "description": "Wait for specified duration",
+        "requiredParams": [
+          "duration"
+        ],
+        "optionalParams": [],
+        "example": {
+          "type": "wait",
+          "duration": 2000
+        }
+      },
+      {
+        "type": "openApp",
+        "description": "Open application by bundle ID",
+        "requiredParams": [
+          "bundleId"
+        ],
+        "optionalParams": [
+          "waitAfter"
+        ],
+        "example": {
+          "type": "openApp",
+          "bundleId": "com.apple.mobileslideshow"
+        }
+      },
+      {
+        "type": "pressButton",
+        "description": "Press device button (home, volumeUp, volumeDown, etc)",
+        "requiredParams": [
+          "button"
+        ],
+        "optionalParams": [
+          "waitAfter"
+        ],
+        "example": {
+          "type": "pressButton",
+          "button": "home"
+        }
+      },
+      {
+        "type": "swipe",
+        "description": "Swipe from one point to another",
+        "requiredParams": [
+          "from",
+          "to"
+        ],
+        "optionalParams": [
+          "duration",
+          "direction"
+        ],
+        "example": {
+          "type": "swipe",
+          "from": {
+            "x": 100,
+            "y": 300
+          },
+          "to": {
+            "x": 100,
+            "y": 100
+          }
+        }
+      },
+      {
+        "type": "waitForElement",
+        "description": "Wait for element to appear",
+        "requiredParams": [
+          "selector"
+        ],
+        "optionalParams": [
+          "timeout",
+          "interval"
+        ],
+        "example": {
+          "type": "waitForElement",
+          "selector": "$continueButton",
+          "timeout": 10000
+        }
+      },
+      {
+        "type": "extractText",
+        "description": "Extract text from element",
+        "requiredParams": [
+          "selector"
+        ],
+        "optionalParams": [
+          "saveToContext",
+          "timeout"
+        ],
+        "example": {
+          "type": "extractText",
+          "selector": "$priceLabel",
+          "saveToContext": "productPrice"
+        }
+      },
+      {
+        "type": "ifExists",
+        "description": "Conditional action based on element existence",
+        "requiredParams": [
+          "selector"
+        ],
+        "optionalParams": [
+          "then",
+          "else",
+          "timeout"
+        ],
+        "example": {
+          "type": "ifExists",
+          "selector": "$skipButton",
+          "then": {
+            "type": "findAndClick",
+            "selector": "$skipButton"
+          }
+        }
+      },
+      {
+        "type": "loop",
+        "description": "Repeat actions multiple times",
+        "requiredParams": [
+          "iterations"
+        ],
+        "optionalParams": [
+          "actions",
+          "action",
+          "delayBetween"
+        ],
+        "example": {
+          "type": "loop",
+          "iterations": 5,
+          "actions": [
+            {
+              "type": "findAndClick",
+              "selector": "$likeButton"
+            },
+            {
+              "type": "wait",
+              "duration": 1000
+            }
+          ]
+        }
+      },
+      {
+        "type": "performActions",
+        "description": "Perform complex gestures using W3C Actions API",
+        "requiredParams": [
+          "actions"
+        ],
+        "optionalParams": [
+          "description"
+        ],
+        "example": {
+          "type": "performActions",
+          "actions": [
+            {
+              "type": "pointer",
+              "id": "finger1",
+              "parameters": {
+                "pointerType": "touch"
+              },
+              "actions": [
+                {
+                  "type": "pointerMove",
+                  "duration": 0,
+                  "x": 100,
+                  "y": 200
+                },
+                {
+                  "type": "pointerDown",
+                  "button": 0
+                },
+                {
+                  "type": "pointerMove",
+                  "duration": 1000,
+                  "x": 200,
+                  "y": 300
+                },
+                {
+                  "type": "pointerUp",
+                  "button": 0
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "type": "setContext",
+        "description": "Save value to context for later use",
+        "requiredParams": [
+          "key",
+          "value"
+        ],
+        "optionalParams": [],
+        "example": {
+          "type": "setContext",
+          "key": "username",
+          "value": "john_doe"
+        }
+      },
+      {
+        "type": "getContext",
+        "description": "Retrieve value from context",
+        "requiredParams": [
+          "key"
+        ],
+        "optionalParams": [],
+        "example": {
+          "type": "getContext",
+          "key": "username"
+        }
+      },
+      {
+        "type": "apiCall",
+        "description": "Make HTTP API call",
+        "requiredParams": [
+          "url"
+        ],
+        "optionalParams": [
+          "method",
+          "headers",
+          "data",
+          "saveToContext",
+          "timeout"
+        ],
+        "example": {
+          "type": "apiCall",
+          "url": "/api/sms/check/$sessionId",
+          "method": "GET",
+          "saveToContext": "smsData"
+        }
+      }
+    ],
+    "count": 15,
+    "categories": {
+      "basic": [
+        "click",
+        "findAndClick",
+        "type",
+        "wait"
+      ],
+      "navigation": [
+        "openApp",
+        "pressButton",
+        "swipe"
+      ],
+      "advanced": [
+        "waitForElement",
+        "extractText",
+        "performActions"
+      ],
+      "conditional": [
+        "ifExists",
+        "loop"
+      ],
+      "data": [
+        "setContext",
+        "getContext",
+        "apiCall"
+      ]
+    },
+    "asyncTaskTypes": [
+      {
+        "type": "poller",
+        "description": "Poll an API endpoint at intervals",
+        "requiredParams": [
+          "endpoint",
+          "interval"
+        ],
+        "optionalParams": [
+          "params",
+          "stopConditions",
+          "saveToContext"
+        ]
+      },
+      {
+        "type": "monitor",
+        "description": "Monitor for UI elements",
+        "requiredParams": [
+          "action",
+          "interval"
+        ],
+        "optionalParams": [
+          "stopConditions",
+          "maxResults"
+        ]
+      },
+      {
+        "type": "captchaWatcher",
+        "description": "Watch for captcha elements",
+        "requiredParams": [
+          "interval"
+        ],
+        "optionalParams": [
+          "pauseOthersOnDetection",
+          "action"
+        ]
+      },
+      {
+        "type": "healthCheck",
+        "description": "Periodic health checks",
+        "requiredParams": [
+          "interval",
+          "endpoint"
+        ],
+        "optionalParams": [
+          "stopConditions"
+        ]
+      },
+      {
+        "type": "dataCollector",
+        "description": "Collect data periodically",
+        "requiredParams": [
+          "interval",
+          "action"
+        ],
+        "optionalParams": [
+          "maxResults",
+          "saveToContext"
+        ]
+      }
+    ]
+  }
+}
