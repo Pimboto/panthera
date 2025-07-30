@@ -17,7 +17,7 @@ import ReactFlow, {
   Position,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Code, Play, Export, Add, Trash, Setting4, AddSquare, Import, Hierarchy2, Edit, CloseSquare } from 'iconsax-reactjs';
+import { Code, Play, Export, Add, Trash, Setting4, AddSquare, Import, Hierarchy2, Edit, CloseSquare, Box1 } from 'iconsax-reactjs';
 import { useToast } from '../hooks/useToast';
 import NodeConfigModal from './NodeConfigModal';
 import dagre from 'dagre';
@@ -84,7 +84,7 @@ const nodeTypes = {
     const isConditional = data.actionType === 'ifExists' || data.actionType === 'loop';
     
     return (
-      <div className="relative">
+      <div className="relative" style={{ zIndex: 10 }}> {/* Ensure actions are above areas */}
         <Handle
           type="target"
           position={Position.Top}
@@ -93,7 +93,11 @@ const nodeTypes = {
         />
         <div
           className={`px-4 py-2 shadow-lg rounded-lg border-2 bg-white ${
-            data.selected ? 'border-blue-500' : 'border-gray-200'
+            data.multiSelected 
+              ? 'border-purple-500 bg-purple-50' 
+              : data.selected 
+                ? 'border-blue-500' 
+                : 'border-gray-200'
           } min-w-[180px]`}
         >
           <div className="flex items-center justify-between">
@@ -118,6 +122,9 @@ const nodeTypes = {
           )}
           {data.config && Object.keys(data.config).length > 0 && (
             <div className="text-xs text-gray-400 mt-1">Configured ✓</div>
+          )}
+          {data.checkpointGroup && (
+            <div className="text-xs text-blue-600 mt-1 font-medium">📋 {data.checkpointGroup}</div>
           )}
         </div>
         {isConditional ? (
@@ -155,7 +162,7 @@ const nodeTypes = {
     );
   },
   startNode: ({ isConnectable }: { isConnectable: boolean }) => (
-    <div className="relative">
+    <div className="relative" style={{ zIndex: 10 }}>
       <div className="px-4 py-2 shadow-lg rounded-lg bg-green-500 text-white border-2 border-green-600">
         <div className="font-medium">Start</div>
       </div>
@@ -168,7 +175,7 @@ const nodeTypes = {
     </div>
   ),
   endNode: ({ isConnectable }: { isConnectable: boolean }) => (
-    <div className="relative">
+    <div className="relative" style={{ zIndex: 10 }}>
       <Handle
         type="target"
         position={Position.Top}
@@ -180,6 +187,108 @@ const nodeTypes = {
       </div>
     </div>
   ),
+  checkpointArea: ({ data, isConnectable }: { data: any; isConnectable: boolean }) => {
+    // Calculate dynamic size based on contained actions
+    const minWidth = 300;
+    const minHeight = 200;
+    const padding = 20;
+    
+    const width = Math.max(minWidth, data.contentWidth || minWidth);
+    const height = Math.max(minHeight, data.contentHeight || minHeight);
+    
+    return (
+      <div 
+        className={`relative border-2 border-dashed rounded-lg p-4 ${
+          data.isDropTarget 
+            ? 'border-green-400 bg-green-50' 
+            : 'border-purple-400 bg-purple-50'
+        } transition-colors`}
+        style={{
+          width: `${width}px`,
+          height: `${height}px`,
+          zIndex: -1, // Ensure area is behind actions
+        }}
+      >
+        {/* Connection Handles */}
+        <Handle
+          type="target"
+          position={Position.Top}
+          isConnectable={isConnectable}
+          className="w-4 h-4 bg-purple-500 border-2 border-white rounded-full"
+          style={{ top: '-8px', left: '50%', transform: 'translateX(-50%)' }}
+        />
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          isConnectable={isConnectable}
+          className="w-4 h-4 bg-purple-500 border-2 border-white rounded-full"
+          style={{ bottom: '-8px', left: '50%', transform: 'translateX(-50%)' }}
+        />
+        
+        <div className="flex items-center justify-between mb-2 relative z-10">
+          <div className="flex items-center gap-2 flex-1">
+            <Box1 size={20} color="#8b5cf6" variant="Bulk" />
+            {data.isEditing ? (
+              <input
+                type="text"
+                value={data.editingName || data.label}
+                onChange={(e) => data.onNameChange && data.onNameChange(e.target.value)}
+                onBlur={data.onNameSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    data.onNameSave && data.onNameSave();
+                  } else if (e.key === 'Escape') {
+                    data.onNameCancel && data.onNameCancel();
+                  }
+                }}
+                className="font-medium text-purple-800 bg-white border border-purple-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                autoFocus
+                onFocus={(e) => e.target.select()}
+              />
+            ) : (
+              <span 
+                className="font-medium text-purple-800 cursor-pointer hover:text-purple-600"
+                onDoubleClick={data.onEdit}
+              >
+                {data.label}
+              </span>
+            )}
+          </div>
+          <div className="flex gap-1">
+            {!data.isEditing && (
+              <>
+                <button
+                  onClick={data.onEdit}
+                  className="p-1 text-purple-400 hover:text-purple-600 hover:bg-purple-100 rounded"
+                >
+                  <Edit size={16} />
+                </button>
+                {data.onDelete && (
+                  <button
+                    onClick={data.onDelete}
+                    className="p-1 text-red-400 hover:text-red-600 hover:bg-red-100 rounded"
+                  >
+                    <Trash size={16} />
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+        <div className="text-xs text-purple-600 mb-2 relative z-10">
+          {data.actionCount || 0} actions
+        </div>
+        {(!data.actionCount || data.actionCount === 0) && (
+          <div className="absolute inset-4 border border-dashed border-purple-300 rounded flex items-center justify-center">
+            <div className="text-purple-400 text-center">
+              <Box1 size={32} className="mx-auto mb-2 opacity-50" />
+              <div className="text-sm">Checkpoint: {data.label}</div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  },
 };
 
 const initialNodes: Node[] = [
@@ -197,12 +306,99 @@ const initialNodes: Node[] = [
   },
 ];
 
+// Function to generate checkpoints from checkpoint areas
+const generateCheckpoints = (nodes: Node[], edges: Edge[], checkpointGroups: Record<string, string>) => {
+  const actionNodes = nodes.filter((node) => node.type === 'actionNode');
+  const checkpointAreaNodes = nodes.filter((node) => node.type === 'checkpointArea');
+  
+  if (actionNodes.length === 0) return [];
+
+  // Helper function to check if a node is inside an area
+  const checkIfNodeInAreaExport = (nodePosition: {x: number, y: number}, areaNode: Node) => {
+    const areaPos = areaNode.position;
+    const areaWidth = areaNode.data.contentWidth || 300;
+    const areaHeight = areaNode.data.contentHeight || 200;
+    
+    return (
+      nodePosition.x > areaPos.x &&
+      nodePosition.x < areaPos.x + areaWidth &&
+      nodePosition.y > areaPos.y + 60 && // Account for header
+      nodePosition.y < areaPos.y + areaHeight
+    );
+  };
+
+  // Group actions by checkpoint areas
+  const groupedNodes = new Map<string, Node[]>();
+  
+  // First, assign actions that are inside checkpoint areas
+  checkpointAreaNodes.forEach(areaNode => {
+    const actionsInArea = actionNodes.filter(actionNode => 
+      checkIfNodeInAreaExport(actionNode.position, areaNode)
+    );
+    
+    if (actionsInArea.length > 0) {
+      groupedNodes.set(areaNode.data.label, actionsInArea);
+    }
+  });
+
+  // Then, assign remaining actions to a default checkpoint
+  const assignedActionIds = new Set<string>();
+  groupedNodes.forEach(actions => {
+    actions.forEach(action => assignedActionIds.add(action.id));
+  });
+
+  const unassignedActions = actionNodes.filter(node => !assignedActionIds.has(node.id));
+  if (unassignedActions.length > 0) {
+    groupedNodes.set('default', unassignedActions);
+  }
+
+  // Convert groups to checkpoints
+  const checkpoints: any[] = [];
+  const sortedGroups = Array.from(groupedNodes.entries()).sort(([a], [b]) => {
+    // Put 'default' at the end
+    if (a === 'default') return 1;
+    if (b === 'default') return -1;
+    return a.localeCompare(b);
+  });
+  
+  sortedGroups.forEach(([checkpointName, groupNodes], index) => {
+    // Create actions from nodes in this group
+    const actions = groupNodes
+      .filter(node => node.data.config && Object.keys(node.data.config).length > 0)
+      .map(node => ({
+        type: node.data.actionType,
+        description: node.data.description,
+        ...node.data.config,
+      }));
+
+    if (actions.length > 0) {
+      const checkpoint = {
+        id: groupNodes[0].id,
+        name: checkpointName,
+        type: 'interactive' as const,
+        timeout: 30000,
+        critical: false,
+        description: actions.length === 1 
+          ? actions[0].description 
+          : `${checkpointName}: ${actions.map(a => a.type).join(', ')}`,
+        dependencies: index > 0 ? [sortedGroups[index - 1][0]] : [],
+        actions,
+      };
+      
+      checkpoints.push(checkpoint);
+    }
+  });
+
+  return checkpoints;
+};
+
 const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const [flowName, setFlowName] = useState('New Flow');
   const [flowDescription, setFlowDescription] = useState('');
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
@@ -214,6 +410,12 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
   const [editingSelector, setEditingSelector] = useState<string | null>(null);
   const [editSelectorName, setEditSelectorName] = useState('');
   const [editSelectorValue, setEditSelectorValue] = useState('');
+  const [checkpointGroups, setCheckpointGroups] = useState<Record<string, string>>({});
+  const [availableCheckpoints, setAvailableCheckpoints] = useState<string[]>(['checkpoint1']);
+  const [newCheckpointName, setNewCheckpointName] = useState('');
+  const [checkpointAreas, setCheckpointAreas] = useState<Map<string, {name: string, position: {x: number, y: number}}>>(new Map());
+  const [draggingNode, setDraggingNode] = useState<string | null>(null);
+  const [dragTargetAreas, setDragTargetAreas] = useState<Set<string>>(new Set());
 
   const onConnect = useCallback(
     (params: Connection) =>
@@ -233,6 +435,224 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
   const onInit = (rfi: ReactFlowInstance) => {
     setReactFlowInstance(rfi);
   };
+
+  // Helper functions - declared first to avoid initialization errors
+  const calculateAreaBounds = useCallback((areaNode: Node, actionNodes: Node[]) => {
+    const actionsInArea = actionNodes.filter(actionNode => {
+      const areaPos = areaNode.position;
+      const nodePos = actionNode.position;
+      // Use basic overlap check first
+      return (
+        nodePos.x > areaPos.x - 100 && // Give some tolerance
+        nodePos.x < areaPos.x + 400 &&
+        nodePos.y > areaPos.y - 50 &&
+        nodePos.y < areaPos.y + 300
+      );
+    });
+
+    if (actionsInArea.length === 0) {
+      return { width: 300, height: 200 };
+    }
+
+    // Calculate bounding box of all actions
+    const padding = 40;
+    const nodeWidth = 180; // Approximate action node width
+    const nodeHeight = 60; // Approximate action node height
+
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+
+    actionsInArea.forEach(actionNode => {
+      const relativeX = actionNode.position.x - areaNode.position.x;
+      const relativeY = actionNode.position.y - areaNode.position.y;
+      
+      minX = Math.min(minX, relativeX);
+      maxX = Math.max(maxX, relativeX + nodeWidth);
+      minY = Math.min(minY, relativeY);
+      maxY = Math.max(maxY, relativeY + nodeHeight);
+    });
+
+    const contentWidth = Math.max(300, maxX - Math.min(minX, 0) + padding * 2);
+    const contentHeight = Math.max(200, maxY - Math.min(minY, 60) + padding * 2); // 60px for header
+
+    return { width: contentWidth, height: contentHeight };
+  }, []);
+
+  const checkIfNodeInArea = useCallback((nodePosition: {x: number, y: number}, areaNode: Node) => {
+    const areaPos = areaNode.position;
+    const areaWidth = areaNode.data.contentWidth || 300;
+    const areaHeight = areaNode.data.contentHeight || 200;
+    
+    return (
+      nodePosition.x > areaPos.x &&
+      nodePosition.x < areaPos.x + areaWidth &&
+      nodePosition.y > areaPos.y + 60 && // Account for header
+      nodePosition.y < areaPos.y + areaHeight
+    );
+  }, []);
+
+  // Helper function to check if a node is inside an area (for layout)
+  const checkIfNodeInAreaLayout = useCallback((nodePosition: {x: number, y: number}, areaNode: Node) => {
+    const areaPos = areaNode.position;
+    const areaWidth = areaNode.data.contentWidth || 300;
+    const areaHeight = areaNode.data.contentHeight || 200;
+    
+    return (
+      nodePosition.x > areaPos.x &&
+      nodePosition.x < areaPos.x + areaWidth &&
+      nodePosition.y > areaPos.y + 60 && // Account for header
+      nodePosition.y < areaPos.y + areaHeight
+    );
+  }, []);
+
+  // Inline editing functions
+  const startInlineEdit = useCallback((areaId: string, currentName: string) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === areaId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              isEditing: true,
+              editingName: currentName,
+            },
+          };
+        }
+        return node;
+      })
+    );
+  }, []);
+
+  const handleInlineNameChange = useCallback((areaId: string, newName: string) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === areaId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              editingName: newName,
+            },
+          };
+        }
+        return node;
+      })
+    );
+  }, []);
+
+  const saveInlineEdit = useCallback((areaId: string) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === areaId && node.data.editingName?.trim()) {
+          const newName = node.data.editingName.trim();
+          
+          // Update checkpoint areas map
+          setCheckpointAreas(prev => {
+            const newMap = new Map(prev);
+            const area = newMap.get(areaId);
+            if (area) {
+              newMap.set(areaId, { ...area, name: newName });
+            }
+            return newMap;
+          });
+
+          toast.showSuccess('Updated', `Checkpoint area renamed to "${newName}"`);
+
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              label: newName,
+              isEditing: false,
+              editingName: '',
+            },
+          };
+        }
+        return node;
+      })
+    );
+  }, [toast]);
+
+  const cancelInlineEdit = useCallback((areaId: string) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === areaId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              isEditing: false,
+              editingName: '',
+            },
+          };
+        }
+        return node;
+      })
+    );
+  }, []);
+
+  const deleteCheckpointArea = useCallback((areaId: string) => {
+    setNodes((nds) => nds.filter((node) => node.id !== areaId));
+    setCheckpointAreas(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(areaId);
+      return newMap;
+    });
+
+    // Remove associations for actions that were in this area
+    setCheckpointGroups(prev => {
+      const newGroups = { ...prev };
+      Object.keys(newGroups).forEach(nodeId => {
+        if (newGroups[nodeId] === areaId) {
+          delete newGroups[nodeId];
+        }
+      });
+      return newGroups;
+    });
+
+    toast.showSuccess('Deleted', 'Checkpoint area deleted');
+  }, [toast]);
+
+  const updateActionCountInAreas = useCallback(() => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.type === 'checkpointArea') {
+          const actionNodes = nds.filter(n => n.type === 'actionNode');
+          const bounds = calculateAreaBounds(node, actionNodes);
+          
+          // Update the node with new bounds first, preserving all handlers
+          const updatedNode = {
+            ...node,
+            data: {
+              ...node.data,
+              contentWidth: bounds.width,
+              contentHeight: bounds.height,
+              onEdit: () => startInlineEdit(node.id, node.data.label),
+              onNameChange: (newName: string) => handleInlineNameChange(node.id, newName),
+              onNameSave: () => saveInlineEdit(node.id),
+              onNameCancel: () => cancelInlineEdit(node.id),
+              onDelete: () => deleteCheckpointArea(node.id),
+            },
+          };
+          
+          // Then count actions within the updated bounds
+          const actionsInArea = actionNodes.filter(actionNode => 
+            checkIfNodeInArea(actionNode.position, updatedNode)
+          ).length;
+          
+          return {
+            ...updatedNode,
+            data: {
+              ...updatedNode.data,
+              actionCount: actionsInArea,
+            },
+          };
+        }
+        return node;
+      })
+    );
+  }, [calculateAreaBounds, checkIfNodeInArea, startInlineEdit, handleInlineNameChange, saveInlineEdit, cancelInlineEdit, deleteCheckpointArea]);
 
   const onDragOver = useCallback((event: DragEvent) => {
     event.preventDefault();
@@ -275,21 +695,37 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
       };
 
       setNodes((nds) => nds.concat(newNode));
+      // Update area sizes after adding new node
+      setTimeout(updateActionCountInAreas, 100);
     },
     [reactFlowInstance, toast]
   );
 
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
-    // Update node data with onSettings callback
-    if (node.type === 'actionNode') {
+    const isMultiSelect = event.ctrlKey || event.metaKey; // Ctrl on Windows/Linux, Cmd on Mac
+    
+    if (isMultiSelect && node.type === 'actionNode') {
+      // Multi-select mode
+      setSelectedNodes(prev => {
+        const newSelected = new Set(prev);
+        if (newSelected.has(node.id)) {
+          newSelected.delete(node.id);
+        } else {
+          newSelected.add(node.id);
+        }
+        return newSelected;
+      });
+      
+      // Update node visual selection
       setNodes((nds) =>
         nds.map((n) => {
           if (n.id === node.id) {
+            const isSelected = !selectedNodes.has(node.id);
             return {
               ...n,
               data: {
                 ...n.data,
+                multiSelected: isSelected,
                 onSettings: () => {
                   setConfigNode(node);
                   setIsConfigModalOpen(true);
@@ -300,8 +736,48 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
           return n;
         })
       );
+    } else {
+      // Single select mode
+      setSelectedNode(node);
+      setSelectedNodes(new Set()); // Clear multi-selection
+      
+      // Clear multi-selection visual indicators
+      setNodes((nds) =>
+        nds.map((n) => ({
+          ...n,
+          data: {
+            ...n.data,
+            multiSelected: false,
+            onSettings: n.type === 'actionNode' ? () => {
+              setConfigNode(n);
+              setIsConfigModalOpen(true);
+            } : n.data.onSettings,
+          },
+        }))
+      );
+      
+      // Update single selected node
+      if (node.type === 'actionNode') {
+        setNodes((nds) =>
+          nds.map((n) => {
+            if (n.id === node.id) {
+              return {
+                ...n,
+                data: {
+                  ...n.data,
+                  onSettings: () => {
+                    setConfigNode(node);
+                    setIsConfigModalOpen(true);
+                  },
+                },
+              };
+            }
+            return n;
+          })
+        );
+      }
     }
-  }, []);
+  }, [selectedNodes]);
 
   const deleteSelectedNode = useCallback(() => {
     if (selectedNode && selectedNode.id !== 'start' && selectedNode.id !== 'end') {
@@ -350,6 +826,13 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
             setFlowName(flowDef.name || 'Imported Flow');
             setFlowDescription(flowDef.description || '');
             setSelectors(flowDef.selectors || {});
+            
+            // Import checkpoint groups if available
+            if (flowDef.checkpointGroups) {
+              setCheckpointGroups(flowDef.checkpointGroups);
+              const uniqueCheckpoints = [...new Set(Object.values(flowDef.checkpointGroups))];
+              setAvailableCheckpoints(uniqueCheckpoints.length > 0 ? uniqueCheckpoints : ['checkpoint1']);
+            }
             
             // Check if we have visual layout (new format)
             if (flowDef.visualLayout) {
@@ -426,34 +909,131 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
   }, [toast]);
 
   const autoLayout = useCallback(() => {
-    const dagreGraph = new dagre.graphlib.Graph();
-    dagreGraph.setDefaultEdgeLabel(() => ({}));
-    dagreGraph.setGraph({ rankdir: 'TB', nodesep: 50, ranksep: 100 });
+    // Separate nodes by type
+    const checkpointAreas = nodes.filter(n => n.type === 'checkpointArea');
+    const actionNodes = nodes.filter(n => n.type === 'actionNode');
+    const startEndNodes = nodes.filter(n => n.type === 'startNode' || n.type === 'endNode');
+    
+    // First, organize checkpoint areas and start/end nodes using dagre
+    const mainGraph = new dagre.graphlib.Graph();
+    mainGraph.setDefaultEdgeLabel(() => ({}));
+    mainGraph.setGraph({ rankdir: 'TB', nodesep: 100, ranksep: 150 });
 
-    nodes.forEach((node) => {
-      dagreGraph.setNode(node.id, { width: 180, height: 50 });
+    // Add checkpoint areas and start/end nodes to main graph
+    [...checkpointAreas, ...startEndNodes].forEach((node) => {
+      const width = node.type === 'checkpointArea' ? 350 : 180;
+      const height = node.type === 'checkpointArea' ? 250 : 50;
+      mainGraph.setNode(node.id, { width, height });
     });
 
+    // Add edges between checkpoint areas and main nodes
     edges.forEach((edge) => {
-      dagreGraph.setEdge(edge.source, edge.target);
+      const sourceNode = nodes.find(n => n.id === edge.source);
+      const targetNode = nodes.find(n => n.id === edge.target);
+      
+      // Only add edge if both nodes are checkpoint areas or start/end nodes
+      if (sourceNode && targetNode && 
+          (sourceNode.type === 'checkpointArea' || sourceNode.type === 'startNode' || sourceNode.type === 'endNode') &&
+          (targetNode.type === 'checkpointArea' || targetNode.type === 'startNode' || targetNode.type === 'endNode')) {
+        mainGraph.setEdge(edge.source, edge.target);
+      }
     });
 
-    dagre.layout(dagreGraph);
+    dagre.layout(mainGraph);
 
-    const layoutedNodes = nodes.map((node) => {
-      const nodeWithPosition = dagreGraph.node(node.id);
-      return {
-        ...node,
-        position: {
-          x: nodeWithPosition.x - 90,
-          y: nodeWithPosition.y - 25,
-        },
+    // Create new positioned nodes array
+    const layoutedNodes: Node[] = [];
+
+    // Position checkpoint areas and start/end nodes based on dagre layout
+    [...checkpointAreas, ...startEndNodes].forEach((node) => {
+      const nodeWithPosition = mainGraph.node(node.id);
+      const newPosition = {
+        x: nodeWithPosition.x - (node.type === 'checkpointArea' ? 175 : 90),
+        y: nodeWithPosition.y - (node.type === 'checkpointArea' ? 125 : 25),
       };
+      
+      layoutedNodes.push({
+        ...node,
+        position: newPosition,
+      });
+    });
+
+    // Now organize actions within each checkpoint area
+    checkpointAreas.forEach((areaNode) => {
+      const layoutedArea = layoutedNodes.find(n => n.id === areaNode.id);
+      if (!layoutedArea) return;
+
+      // Find actions that belong to this area
+      const actionsInArea = actionNodes.filter(actionNode => 
+        checkIfNodeInAreaLayout(actionNode.position, areaNode)
+      );
+
+      if (actionsInArea.length === 0) return;
+
+      // Create a small dagre graph for actions within this area
+      const areaGraph = new dagre.graphlib.Graph();
+      areaGraph.setDefaultEdgeLabel(() => ({}));
+      areaGraph.setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 60 });
+
+      // Add actions to area graph
+      actionsInArea.forEach((actionNode) => {
+        areaGraph.setNode(actionNode.id, { width: 180, height: 60 });
+      });
+
+      // Add edges between actions in this area
+      edges.forEach((edge) => {
+        const sourceInArea = actionsInArea.find(n => n.id === edge.source);
+        const targetInArea = actionsInArea.find(n => n.id === edge.target);
+        if (sourceInArea && targetInArea) {
+          areaGraph.setEdge(edge.source, edge.target);
+        }
+      });
+
+      dagre.layout(areaGraph);
+
+      // Position actions relative to their area
+      const areaPosition = layoutedArea.position;
+      const padding = 20;
+      const headerHeight = 80; // Space for area header
+
+      actionsInArea.forEach((actionNode) => {
+        const nodeWithPosition = areaGraph.node(actionNode.id);
+        layoutedNodes.push({
+          ...actionNode,
+          position: {
+            x: areaPosition.x + padding + nodeWithPosition.x - 90,
+            y: areaPosition.y + headerHeight + nodeWithPosition.y - 30,
+          },
+        });
+      });
+    });
+
+    // Add any remaining actions that are not in areas
+    const actionsNotInAnyArea = actionNodes.filter(actionNode => {
+      return !checkpointAreas.some(areaNode => 
+        checkIfNodeInAreaLayout(actionNode.position, areaNode)
+      );
+    });
+
+    // Position remaining actions using simple vertical layout
+    let yOffset = 300;
+    actionsNotInAnyArea.forEach((actionNode, index) => {
+      layoutedNodes.push({
+        ...actionNode,
+        position: {
+          x: 500 + (index % 3) * 200, // 3 columns
+          y: yOffset + Math.floor(index / 3) * 100,
+        },
+      });
     });
 
     setNodes(layoutedNodes);
-    toast.showSuccess('Organized', 'Workflow layout organized');
-  }, [nodes, edges, toast, setNodes]);
+    
+    // Update area sizes after layout
+    setTimeout(updateActionCountInAreas, 100);
+    
+    toast.showSuccess('Organized', 'Workflow layout organized while preserving checkpoint areas');
+  }, [nodes, edges, toast, setNodes, checkIfNodeInAreaLayout, updateActionCountInAreas]);
 
   const addSelector = useCallback(() => {
     if (newSelectorName && newSelectorValue) {
@@ -504,6 +1084,174 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
     toast.showSuccess('Deleted', 'Selector deleted successfully');
   }, [selectors, toast]);
 
+  const addCheckpointGroup = useCallback(() => {
+    if (newCheckpointName && !availableCheckpoints.includes(newCheckpointName)) {
+      setAvailableCheckpoints(prev => [...prev, newCheckpointName]);
+      setNewCheckpointName('');
+      toast.showSuccess('Added', 'Checkpoint group created');
+    } else {
+      toast.showError('Error', 'Please enter a unique checkpoint name');
+    }
+  }, [newCheckpointName, availableCheckpoints, toast]);
+
+  const assignNodeToCheckpoint = useCallback((nodeId: string, checkpointName: string) => {
+    setCheckpointGroups(prev => ({
+      ...prev,
+      [nodeId]: checkpointName
+    }));
+    toast.showSuccess('Assigned', `Node assigned to ${checkpointName}`);
+  }, [toast]);
+
+  const removeNodeFromCheckpoint = useCallback((nodeId: string) => {
+    setCheckpointGroups(prev => {
+      const newGroups = { ...prev };
+      delete newGroups[nodeId];
+      return newGroups;
+    });
+    toast.showSuccess('Removed', 'Node removed from checkpoint');
+  }, [toast]);
+
+  const assignMultipleNodesToCheckpoint = useCallback((nodeIds: string[], checkpointName: string) => {
+    setCheckpointGroups(prev => {
+      const newGroups = { ...prev };
+      nodeIds.forEach(nodeId => {
+        newGroups[nodeId] = checkpointName;
+      });
+      return newGroups;
+    });
+    
+    // Update visual data for all nodes
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (nodeIds.includes(node.id)) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              checkpointGroup: checkpointName,
+            },
+          };
+        }
+        return node;
+      })
+    );
+    
+    toast.showSuccess('Assigned', `${nodeIds.length} nodes assigned to ${checkpointName}`);
+  }, [toast]);
+
+  const clearMultiSelection = useCallback(() => {
+    setSelectedNodes(new Set());
+    // Clear visual indicators
+    setNodes((nds) =>
+      nds.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          multiSelected: false,
+        },
+      }))
+    );
+  }, []);
+
+  const createCheckpointArea = useCallback((name: string) => {
+    const areaId = `checkpoint-area-${Date.now()}`;
+    const newArea = {
+      id: areaId,
+      type: 'checkpointArea',
+      position: { x: 100, y: 100 + checkpointAreas.size * 250 },
+      data: {
+        label: name,
+        actionCount: 0,
+        contentWidth: 300,
+        contentHeight: 200,
+        isEditing: false,
+        editingName: '',
+        onEdit: () => startInlineEdit(areaId, name),
+        onNameChange: (newName: string) => handleInlineNameChange(areaId, newName),
+        onNameSave: () => saveInlineEdit(areaId),
+        onNameCancel: () => cancelInlineEdit(areaId),
+        onDelete: () => deleteCheckpointArea(areaId),
+      },
+      draggable: true,
+      selectable: true,
+      zIndex: -1, // Ensure checkpoint areas are behind actions
+    };
+
+    setNodes((nds) => [...nds, newArea]);
+    setCheckpointAreas(prev => new Map(prev).set(areaId, { name, position: newArea.position }));
+    toast.showSuccess('Created', `Checkpoint area "${name}" created`);
+  }, [checkpointAreas.size, toast, startInlineEdit, handleInlineNameChange, saveInlineEdit, cancelInlineEdit, deleteCheckpointArea]);
+
+
+  const onNodeDragStart = useCallback((event: React.MouseEvent, node: Node) => {
+    if (node.type === 'actionNode') {
+      setDraggingNode(node.id);
+    }
+  }, []);
+
+  const onNodeDrag = useCallback((event: React.MouseEvent, node: Node) => {
+    if (node.type === 'actionNode' && draggingNode === node.id) {
+      // Find which checkpoint areas this node is over
+      const checkpointAreaNodes = nodes.filter(n => n.type === 'checkpointArea');
+      const targetAreas = new Set<string>();
+      
+      checkpointAreaNodes.forEach(areaNode => {
+        if (checkIfNodeInArea(node.position, areaNode)) {
+          targetAreas.add(areaNode.id);
+        }
+      });
+      
+      // Update drag target areas if changed
+      if (targetAreas.size !== dragTargetAreas.size || 
+          !Array.from(targetAreas).every(id => dragTargetAreas.has(id))) {
+        setDragTargetAreas(targetAreas);
+        
+        // Update visual feedback for checkpoint areas
+        setNodes((nds) =>
+          nds.map((n) => {
+            if (n.type === 'checkpointArea') {
+              return {
+                ...n,
+                data: {
+                  ...n.data,
+                  isDropTarget: targetAreas.has(n.id),
+                },
+              };
+            }
+            return n;
+          })
+        );
+      }
+    }
+  }, [draggingNode, nodes, dragTargetAreas, checkIfNodeInArea]);
+
+  const onNodeDragStop = useCallback((event: React.MouseEvent, node: Node) => {
+    if (node.type === 'actionNode' && draggingNode === node.id) {
+      // Clear drag state
+      setDraggingNode(null);
+      setDragTargetAreas(new Set());
+      
+      // Clear visual feedback from all checkpoint areas
+      setNodes((nds) =>
+        nds.map((n) => {
+          if (n.type === 'checkpointArea') {
+            return {
+              ...n,
+              data: {
+                ...n.data,
+                isDropTarget: false,
+              },
+            };
+          }
+          return n;
+        })
+      );
+      
+      // Update action counts and area sizes
+      setTimeout(updateActionCountInAreas, 50);
+    }
+  }, [draggingNode, updateActionCountInAreas]);
+
   const exportFlow = useCallback(() => {
     // Generate the flow JSON based on the guide structure
     const flowDefinition = {
@@ -516,6 +1264,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
         author: 'workflow-builder',
         tags: ['visual-builder'],
         selectors: selectors,
+        checkpointGroups: checkpointGroups,
         // Include visual layout information for import
         visualLayout: {
           nodes: nodes.map(node => ({
@@ -532,24 +1281,7 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
             targetHandle: edge.targetHandle
           }))
         },
-        checkpoints: nodes
-          .filter((node) => node.type === 'actionNode')
-          .map((node, index) => ({
-            id: `step-${index + 1}`,
-            name: `checkpoint${index + 1}`,
-            type: 'interactive',
-            timeout: 30000,
-            critical: false,
-            description: node.data.description,
-            dependencies: index > 0 ? [`checkpoint${index}`] : [],
-            actions: [
-              {
-                type: node.data.actionType,
-                description: node.data.description,
-                ...node.data.config,
-              },
-            ],
-          })),
+        checkpoints: generateCheckpoints(nodes, edges, checkpointGroups),
         options: {
           infinite: false,
           maxRuns: 1,
@@ -732,6 +1464,63 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
           )}
         </div>
 
+        <h3 className="font-semibold text-lg mb-4 mt-6">Checkpoint Areas</h3>
+        <div className="space-y-2 mb-6">
+          <div className="space-y-2">
+            <input
+              type="text"
+              placeholder="Area name (e.g., tinder, fotos)"
+              value={newCheckpointName}
+              onChange={(e) => setNewCheckpointName(e.target.value)}
+              className="w-full px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+            <button
+              onClick={() => {
+                if (newCheckpointName.trim()) {
+                  createCheckpointArea(newCheckpointName.trim());
+                  setNewCheckpointName('');
+                } else {
+                  toast.showError('Error', 'Please enter an area name');
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 px-3 py-1 bg-purple-500 text-white text-sm rounded-md hover:bg-purple-600 transition-colors"
+            >
+              <Box1 size={16} />
+              Create Area
+            </button>
+          </div>
+          
+          {checkpointAreas.size > 0 && (
+            <div className="mt-2 space-y-1">
+              <div className="text-xs font-medium text-gray-700 mb-2">Checkpoint Areas:</div>
+              {Array.from(checkpointAreas.entries()).map(([areaId, area]) => {
+                const areaNode = nodes.find(n => n.id === areaId);
+                return (
+                  <div key={areaId} className="text-xs bg-purple-50 p-2 rounded border border-purple-200">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-medium text-purple-800">📦 {area.name}</div>
+                        <div className="text-gray-500 text-xs mt-1">
+                          Actions: {areaNode?.data.actionCount || 0}
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => deleteCheckpointArea(areaId)}
+                          className="p-1 text-red-400 hover:text-red-600 hover:bg-red-100 rounded"
+                        >
+                          <Trash size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+        </div>
+
         <h3 className="font-semibold text-lg mb-4">Actions</h3>
         <div className="space-y-4">
           {Object.entries(actionCategories).map(([key, category]) => (
@@ -770,6 +1559,8 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
           onNodesChange={(changes) => {
             onNodesChange(changes);
             setIsFlowValid(false);
+            // Update action counts when nodes move
+            setTimeout(updateActionCountInAreas, 100);
           }}
           onEdgesChange={(changes) => {
             onEdgesChange(changes);
@@ -780,6 +1571,9 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
           onDrop={onDrop}
           onDragOver={onDragOver}
           onNodeClick={onNodeClick}
+          onNodeDragStart={onNodeDragStart}
+          onNodeDrag={onNodeDrag}
+          onNodeDragStop={onNodeDragStop}
           nodeTypes={nodeTypes}
           fitView
         >
