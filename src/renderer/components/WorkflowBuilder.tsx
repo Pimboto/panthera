@@ -518,19 +518,6 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
     );
   }, []);
 
-  // Helper function to check if a node is inside an area (for layout)
-  const checkIfNodeInAreaLayout = useCallback((nodePosition: {x: number, y: number}, areaNode: Node) => {
-    const areaPos = areaNode.position;
-    const areaWidth = areaNode.data.contentWidth || 300;
-    const areaHeight = areaNode.data.contentHeight || 200;
-    
-    return (
-      nodePosition.x > areaPos.x &&
-      nodePosition.x < areaPos.x + areaWidth &&
-      nodePosition.y > areaPos.y + 60 && // Account for header
-      nodePosition.y < areaPos.y + areaHeight
-    );
-  }, []);
 
   // Inline editing functions
   const startInlineEdit = useCallback((areaId: string, currentName: string) => {
@@ -695,8 +682,9 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
         y: event.clientY,
       });
 
+      const newNodeId = `${type}_${Date.now()}`;
       const newNode: Node = {
-        id: `${type}_${Date.now()}`,
+        id: newNodeId,
         type: 'actionNode',
         position,
         data: {
@@ -708,10 +696,16 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
           )?.color,
           config: {},
           onSettings: () => {
-            setConfigNode(newNode);
-            setIsConfigModalOpen(true);
+            const nodeToEdit = nodes.find(n => n.id === newNodeId);
+            if (nodeToEdit) {
+              setConfigNode(nodeToEdit);
+              setIsConfigModalOpen(true);
+            }
           },
         },
+        draggable: true,
+        connectable: true,
+        selectable: true,
       };
 
       setNodes((nds) => nds.concat(newNode));
@@ -869,8 +863,10 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
                 
                 // Set up handlers for different node types
                 if (node.type === 'actionNode') {
+                  // IMPORTANT: Create a closure with the imported node data
+                  const currentNode = node;
                   nodeData.onSettings = () => {
-                    setConfigNode(node);
+                    setConfigNode(currentNode);
                     setIsConfigModalOpen(true);
                   };
                 } else if (node.type === 'checkpointArea') {
@@ -885,14 +881,22 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
                 return {
                   ...node,
                   data: nodeData,
+                  draggable: true,
+                  connectable: true,
+                  selectable: true,
                 };
               });
               
               const importedEdges = flowDef.visualLayout.edges.map((edge: any) => ({
                 ...edge,
-                type: 'smoothstep',
+                id: edge.id || `edge-${edge.source}-${edge.target}`,
+                type: edge.type || 'smoothstep',
                 markerEnd: { type: MarkerType.ArrowClosed },
+                sourceHandle: edge.sourceHandle || null,
+                targetHandle: edge.targetHandle || null,
               }));
+              
+              console.log('Importing edges:', importedEdges);
               
               setNodes(importedNodes);
               setEdges(importedEdges);
@@ -907,6 +911,17 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
                 });
               });
               setCheckpointAreas(newCheckpointAreas);
+              
+              // Update area sizes after import and force re-render
+              setTimeout(() => {
+                updateActionCountInAreas();
+                console.log('Import complete - nodes:', importedNodes.length, 'edges:', importedEdges.length);
+                
+                // Force React Flow to recalculate connections
+                if (reactFlowInstance) {
+                  reactFlowInstance.fitView({ padding: 0.1 });
+                }
+              }, 100);
             } else {
               // Fallback to old format - convert checkpoints to nodes
               const newNodes: Node[] = [
@@ -1032,42 +1047,63 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
 
       if (actionsInThisArea.length === 0) return;
 
-      // Grid layout with UNLIMITED SPACE - area will expand to fit all actions
+      // VERTICAL layout - organize actions TOP-DOWN with proper connections
       const areaPos = layoutedArea.position;
       const padding = 40;
       const headerHeight = 90;
       const actionWidth = 180;
       const actionHeight = 80;
-      const spacingX = 30; // Horizontal spacing between actions
-      const spacingY = 30; // Vertical spacing between actions
+      const spacingY = 40; // Vertical spacing between actions
 
-      // Calculate optimal grid: prefer 2-3 actions per row
-      const maxActionsPerRow = Math.min(3, actionsInThisArea.length);
-      const actionsPerRow = actionsInThisArea.length === 1 ? 1 : 
-                           actionsInThisArea.length === 2 ? 2 : 
-                           Math.min(maxActionsPerRow, Math.ceil(Math.sqrt(actionsInThisArea.length)));
+      // Create a mini dagre graph for actions to respect their connections
+      const actionGraph = new dagre.graphlib.Graph();
+      actionGraph.setDefaultEdgeLabel(() => ({}));
+      actionGraph.setGraph({ rankdir: 'TB', nodesep: spacingY, ranksep: spacingY });
 
-      console.log(`Organizing ${actionsInThisArea.length} actions in ${actionsPerRow} columns`);
+      // Add all actions to the graph
+      actionsInThisArea.forEach((actionNode) => {
+        actionGraph.setNode(actionNode.id, { width: actionWidth, height: actionHeight });
+      });
 
-      actionsInThisArea.forEach((actionNode, index) => {
-        const row = Math.floor(index / actionsPerRow);
-        const col = index % actionsPerRow;
+      // Add edges between actions that are connected
+      edges.forEach((edge) => {
+        const source = actionsInThisArea.find(n => n.id === edge.source);
+        const target = actionsInThisArea.find(n => n.id === edge.target);
+        if (source && target) {
+          actionGraph.setEdge(edge.source, edge.target);
+        }
+      });
 
-        const x = areaPos.x + padding + (col * (actionWidth + spacingX));
-        const y = areaPos.y + headerHeight + padding + (row * (actionHeight + spacingY));
+      // Apply dagre layout
+      dagre.layout(actionGraph);
+
+      // Position actions vertically centered in the area
+      let minY = Infinity, maxY = -Infinity;
+      actionsInThisArea.forEach((actionNode) => {
+        const nodePosition = actionGraph.node(actionNode.id);
+        minY = Math.min(minY, nodePosition.y);
+        maxY = Math.max(maxY, nodePosition.y);
+      });
+
+      const totalHeight = maxY - minY + actionHeight;
+      const centerX = areaPos.x + padding + actionWidth / 2;
+
+      actionsInThisArea.forEach((actionNode) => {
+        const nodePosition = actionGraph.node(actionNode.id);
+        const x = centerX - actionWidth / 2;
+        const y = areaPos.y + headerHeight + padding + (nodePosition.y - minY);
 
         layoutedNodes.push({
           ...actionNode,
           position: { x, y },
         });
 
-        console.log(`Action "${actionNode.data.label}" positioned at (${x}, ${y}) - row ${row}, col ${col}`);
+        console.log(`Action "${actionNode.data.label}" positioned vertically at (${x}, ${y})`);
       });
 
       // Calculate the new area size needed
-      const rows = Math.ceil(actionsInThisArea.length / actionsPerRow);
-      const neededWidth = padding * 2 + (actionsPerRow * actionWidth) + ((actionsPerRow - 1) * spacingX);
-      const neededHeight = headerHeight + padding * 2 + (rows * actionHeight) + ((rows - 1) * spacingY);
+      const neededWidth = padding * 2 + actionWidth;
+      const neededHeight = headerHeight + padding * 2 + totalHeight;
 
       // Update the layouted area size
       const areaIndex = layoutedNodes.findIndex(n => n.id === layoutedArea.id);
@@ -1346,14 +1382,24 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
             id: node.id,
             type: node.type,
             position: node.position,
-            data: node.data
+            data: {
+              ...node.data,
+              // Remove functions from data for clean export
+              onSettings: undefined,
+              onEdit: undefined,
+              onNameChange: undefined,
+              onNameSave: undefined,
+              onNameCancel: undefined,
+              onDelete: undefined,
+            }
           })),
           edges: edges.map(edge => ({
             id: edge.id,
             source: edge.source,
             target: edge.target,
-            sourceHandle: edge.sourceHandle,
-            targetHandle: edge.targetHandle
+            sourceHandle: edge.sourceHandle || null,
+            targetHandle: edge.targetHandle || null,
+            type: edge.type || 'smoothstep',
           }))
         },
         checkpoints: generateCheckpoints(nodes, edges, checkpointGroups),
