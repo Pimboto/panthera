@@ -444,8 +444,15 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
         addEdge(
           {
             ...params,
-            type: 'smoothstep',
-            markerEnd: { type: MarkerType.ArrowClosed },
+            type: 'bezier',
+            animated: true,
+            /* style: { strokeWidth: 2, stroke: '#a78bfa' }, */
+            /* markerEnd: { 
+              type: MarkerType.ArrowClosed,
+              width: 20,
+              height: 20,
+              color: '#a78bfa',
+            }, */
           },
           eds
         )
@@ -891,8 +898,15 @@ const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({ toast }) => {
               const importedEdges = flowDef.visualLayout.edges.map((edge: any) => ({
                 ...edge,
                 id: edge.id || `edge-${edge.source}-${edge.target}`,
-                type: edge.type || 'smoothstep',
-                markerEnd: { type: MarkerType.ArrowClosed },
+                type: 'bezier',
+                animated: true,
+                style: { strokeWidth: 2, stroke: '#a78bfa' },
+                markerEnd: { 
+                  type: MarkerType.ArrowClosed,
+                  width: 20,
+                  height: 20,
+                  color: '#a78bfa',
+                },
                 sourceHandle: edge.sourceHandle || null,
                 targetHandle: edge.targetHandle || null,
               }));
